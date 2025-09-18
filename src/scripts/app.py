@@ -21,19 +21,8 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-folder_ids = [
-    "1WKkq6uSr0_7cf3ckmv4UHeQtVHUjwhlI",  # models folder
-    "1wKzWDdU9jhjgKhkZ-kltl1_PXVZBPhJx"   # test folder
-]
-
-outputs = ["models", "test"]
-
-for output in outputs:
-    os.makedirs(output, exist_ok=True)
-
-for folder_id, output in zip(folder_ids, outputs):
-    url = f"https://drive.google.com/drive/folders/{folder_id}"
-    gdown.download_folder(url, output=f"src/{output}", quiet=False)
+url = "https://drive.google.com/drive/folders/1O9ct9Upf5fLT3sztkAGTzMZJbyWsyy4s"
+gdown.download_folder(url, output="/src", quiet=False)
 # -- Cooldown for prediction button
 cooldown = 5
 # -- Loading valid dates and test data
