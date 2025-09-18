@@ -7,6 +7,7 @@ import pydeck as pdk
 import matplotlib.pyplot as plt 
 import altair as alt
 import random
+import xgboost as xgb
 import pandas as pd
 from matplotlib.colors import rgb2hex
 from functions import cmap_continuous, status_color
@@ -32,7 +33,7 @@ for output in outputs:
 
 for folder_id, output in zip(folder_ids, outputs):
     url = f"https://drive.google.com/drive/folders/{folder_id}"
-    gdown.download_folder(url, output=output, quiet=False)
+    gdown.download_folder(url, output=f"src/{output}", quiet=False)
 # -- Cooldown for prediction button
 cooldown = 5
 # -- Loading valid dates and test data
