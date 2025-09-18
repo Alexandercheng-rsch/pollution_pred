@@ -22,7 +22,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-url = "1O9ct9Upf5fLT3sztkAGTzMZJbyWsyy4s"
+url = "https://drive.google.com/drive/folders/1O9ct9Upf5fLT3sztkAGTzMZJbyWsyy4s"
 output = "./pollution_data"  # Current directory
 
 # Create directory
