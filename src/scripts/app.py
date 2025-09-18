@@ -59,7 +59,7 @@ apptitle = 'GW Quickview'
 # -- o3 Model
 @st.cache_data
 def load_model_o3():
-    with open('src/models/xg_reg_o3.model', 'rb') as f:
+    with open('/mount/src/pollution_pred/pollution_data/models/xg_reg_o3.model', 'rb') as f:
         model = pickle.load(f)
     return model 
 
@@ -67,20 +67,20 @@ def load_model_o3():
 @st.cache_data
 def load_model_pm25_classifier():
     model = xgb.XGBClassifier()
-    model.load_model('src/models/binary_classifier.model')
+    model.load_model('/mount/src/pollution_pred/pollution_data/models/binary_classifier.model')
     return model 
 
 # -- PM2.5 Middle Model
 @st.cache_data
 def load_model_pm25_middle():
     model = xgb.XGBRegressor()
-    model.load_model('src/models/xg_mid.model')
+    model.load_model('/mount/src/pollution_pred/pollution_data/models/xg_mid.model')
     return model 
 # -- PM2.5 Upper Model 
 @st.cache_data
 def load_model_pm25_upper():
     model = xgb.XGBRegressor()
-    model.load_model('src/models/xg_90.model')
+    model.load_model('/mount/src/pollution_pred/pollution_data/models/xg_90.model')
     return model 
 
 # -- Initiate Models
@@ -98,14 +98,14 @@ pm25_upper_model.set_params(tree_method='hist', device='cpu')
 # -- o3 Model
 @st.cache_data
 def load_encoder_o3():
-    with open('src/models/encoder_o3.model', 'rb') as f:
+    with open('/mount/src/pollution_pred/pollution_data/models/encoder_o3.model', 'rb') as f:
         model = pickle.load(f)
     return model
 
 # -- PM2.5 Model
 @st.cache_data
 def load_encoder_pm25():
-    with open('src/models/encoder_pm25.model', 'rb') as f:
+    with open('/mount/src/pollution_pred/pollution_data/models/encoder_pm25.model', 'rb') as f:
         model = pickle.load(f)
     return model
 
@@ -116,10 +116,10 @@ st.set_page_config(page_title=apptitle, page_icon=':cloud:', layout='wide')
 
 # -- Preloaded variables
 valid_dates_o3 = load_data('src/ect/valid_dates.p')
-X_o3_test = load_data('src/test/X_o3_test.p')
-y_o3_test = load_data('src/test/y_o3_test.p')
-X_pm25_test = load_data('src/test/X_pm25_test.p')
-y_pm25_test = load_data('src/test/y_pm25_test.p')
+X_o3_test = load_data('/mount/src/pollution_pred/pollution_data/test/X_o3_test.p')
+y_o3_test = load_data('/mount/src/pollution_pred/pollution_data/test/y_o3_test.p')
+X_pm25_test = load_data('/mount/src/pollution_pred/pollution_data/test/X_pm25_test.p')
+y_pm25_test = load_data('/mount/src/pollution_pred/pollution_data/test/y_pm25_test.p')
 station_coordinates = load_data('src/ect/location_coordinates.p')
 station_coordinates = pd.DataFrame(station_coordinates).T.reset_index()
 station_coordinates.columns = ['station', 'longitude', 'latitude']
