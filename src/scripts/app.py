@@ -21,8 +21,16 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-url = "https://drive.google.com/drive/folders/1O9ct9Upf5fLT3sztkAGTzMZJbyWsyy4s"
-gdown.download_folder(url, output="/src", quiet=False)
+
+
+url = "1O9ct9Upf5fLT3sztkAGTzMZJbyWsyy4s"
+output = "/tmp/pollution_data"  # writable folder
+
+# Make sure the folder exists
+os.makedirs(output, exist_ok=True)
+
+gdown.download_folder(url, output=output, quiet=False)
+
 # -- Cooldown for prediction button
 cooldown = 5
 # -- Loading valid dates and test data
