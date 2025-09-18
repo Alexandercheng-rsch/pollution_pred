@@ -1,4 +1,4 @@
 # Ignore models and test folders
-src/models/
-src/test/
+src/models
+src/test
 weather_completed.csv 
