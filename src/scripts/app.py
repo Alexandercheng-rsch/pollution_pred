@@ -27,10 +27,10 @@ url = "1O9ct9Upf5fLT3sztkAGTzMZJbyWsyy4s"
 output = "/tmp/pollution_data"
 
 # Make sure the folder exists
-os.makedirs(output, exist_ok=True)
+files = os.makedirs(output)
 
 gdown.download_folder(url, output=output, quiet=False)
-
+print(files)
 # -- Cooldown for prediction button
 cooldown = 5
 # -- Loading valid dates and test data
