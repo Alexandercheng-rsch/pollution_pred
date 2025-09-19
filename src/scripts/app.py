@@ -41,14 +41,14 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
     os.makedirs(output, exist_ok=True)
     for i, file in enumerate(url_models):
         st.progress(i/len(url_models), text='Please wait, currently downloading models')
-        gdown.download_folder(file, output=output, quiet=False)
+        gdown.download(file, output=output, quiet=False)
         os.makedirs(output, exist_ok=True)
     
     output = "./pollution_data/test"  # Current directory
     os.makedirs(output, exist_ok=True)
     for i, file in enumerate(url_test):
         st.progress(i/len(url_test), text='Please wait, currently downloading models')
-        gdown.download_folder(file, output=output, quiet=False)
+        gdown.download(file, output=output, quiet=False)
         os.makedirs(output, exist_ok=True)
     st.session_state.downloaded = True
 # -- Cooldown for prediction button
