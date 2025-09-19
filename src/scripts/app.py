@@ -345,10 +345,11 @@ with st.sidebar:
                     pm25_classifier_model.set_params(tree_method='hist', device='cpu')
                     pm25_middle_model.set_params(tree_method='hist', device='cpu')
                     pm25_upper_model.set_params(tree_method='hist', device='cpu')
-                    
+                    encode_dict['pm25'] = pm25_encoder
                 else:
                     o3_encoder = load_encoder_o3()
                     o3_model = load_model_o3()
+                    encode_dict['o3'] = o3_encoder
                     o3_model.set_params(tree_method='hist', device='cpu')
                 st.session_state.loaded = True
                 st.session_state.last_execution = current_time
