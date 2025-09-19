@@ -180,14 +180,14 @@ station_list = ['Belfast Centre', 'Bexley - Belvedere West',
        'Wicken Fen', 'Wigan Centre', 'Wirral Tranmere', 'Yarner Wood',
        'York Bootham']
 
-st.markdown("""
-<style>
-    button.step-up {display: none;}
-    button.step-down {display: none;}
-    div[data-baseweb] {border-radius: 4px;}
-</style>""",
-unsafe_allow_html=True)
-
+st.markdown(
+       "<style>" +
+        ".element-container button.step-up { display: none; } " +
+        ".element-container button.step-down  { display: none; } " +
+        ".element-container div[data-baseweb] { border-radius: 4px; } "
+       "</style>"
+       , unsafe_allow_html=True
+)
 # Select the station you want to predict
 with st.sidebar:
     st.session_state.loaded = False 
