@@ -54,13 +54,13 @@ def load_icon(path):
 green_arrow = load_icon('src/icon/arrow.png')
 
 # -- Function for encoder dictionary
-@st.cache_data
-def get_encoder_dict(encoder_1, encoder_2):
-    encoders_dict = {
-    'o3': encoder_1,
-    'pm25': encoder_2
-}
-    return encoders_dict
+# @st.cache_data
+# def get_encoder_dict(encoder_1, encoder_2):
+#     encoders_dict = {
+#     'o3': encoder_1,
+#     'pm25': encoder_2
+# }
+#     return encoders_dict
 # -- Set page config
 apptitle = 'Air Quality Forecaster'
 
@@ -199,6 +199,7 @@ with st.sidebar:
             pm25_upper_model.set_params(tree_method='hist', device='cpu')
             pm25_encoder = load_encoder_pm25()
             
+            encoder = pm25_encoder
             if st.session_state.o3_loaded:
                 del o3_encoder; gc.collect()
                 del o3_model; gc.collect()
@@ -230,6 +231,7 @@ with st.sidebar:
                 del pm25_upper_model; gc.collect()
                 st.session_state.pm25_loaded = False
             pollutant = 'o3'
+            encoder = o3_encoder
             station_df = X_o3_test[X_o3_test['station'] ==f'{select_station}']
             
             cmap_list_lines = [
@@ -302,7 +304,7 @@ with st.sidebar:
 
         # Given information, start predicting 
         if st.button('Predict'):
-            encoders_dict = get_encoder_dict(o3_encoder, pm25_encoder)
+
             
             with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
                 time.sleep(3)
@@ -354,7 +356,7 @@ with st.sidebar:
                     
                 }
                 input_df.columns = X_dfs[pollutant].columns
-                transformed_input = encoders_dict[pollutant].transform(input_df)
+                transformed_input = encoder.transform(input_df)
                 
                 if pollutant == 'o3':
                     prediction = np.expm1(o3_model.predict(transformed_input)[0])
