@@ -53,14 +53,20 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
         progress_bar.progress(i / len(url_models), text=f"Downloading models ({i + 1}/{len(url_models)})")
         gdown.download(file, output=output, quiet=False)
     
-    output = "./pollution_data/test"  # Current directory
-    os.makedirs(output, exist_ok=True)
-    progress_bar = st.progress(0, text="Downloading test files...")
-    test_names = ['X_o3_test', 'X_pm25_test', 'y_o3_test', 'y_pm25_test']
-    for i, file in enumerate(url_test):
-        progress_bar.progress(i / len(url_test), text=f"Downloading test ({i + 1}/{len(url_test)})")
-        gdown.download(file, output=output, quiet=False)
-        print("Downloaded:", os.listdir(output))
+    test_files = {
+        "1dD5CohGL9jp3y_kCGKwEHkB2pMkXqSqu": "X_o3_test.p",
+        "1TUfv052yVfr3qr34wsETZM8gFGifjl27": "y_o3_test.p",
+        "1amy0T8czFfJjJBQ6rjzqofjwcZDuWF_0": "X_pm25_test.p",
+        "1nc7YtacKPwpUFTX1LzZFUKHqAzcG35Li": "y_pm25_test.p",
+    }
+
+    output_dir = "./pollution_data/test"
+    os.makedirs(output_dir, exist_ok=True)
+
+    for file_id, filename in test_files.items():
+        url = f"https://drive.google.com/uc?id={file_id}"
+        output_path = os.path.join(output_dir, filename)
+        gdown.download(url, output=output_path, quiet=False)
     st.session_state.downloaded = True
 # -- Cooldown for prediction button
 cooldown = 5
