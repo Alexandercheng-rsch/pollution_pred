@@ -50,8 +50,8 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
         
     test_files = {
         "1dD5CohGL9jp3y_kCGKwEHkB2pMkXqSqu": "X_o3_test.p",
-        "1TUfv052yVfr3qr34wsETZM8gFGifjl27": "y_o3_test.p",
-        "1amy0T8czFfJjJBQ6rjzqofjwcZDuWF_0": "X_pm25_test.p",
+        "1amy0T8czFfJjJBQ6rjzqofjwcZDuWF_0": "y_o3_test.p",
+        "1TUfv052yVfr3qr34wsETZM8gFGifjl27": "X_pm25_test.p",
         "1nc7YtacKPwpUFTX1LzZFUKHqAzcG35Li": "y_pm25_test.p",
     }
 
