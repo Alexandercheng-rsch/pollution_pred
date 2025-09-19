@@ -295,11 +295,11 @@ with st.sidebar:
 
         # Meteorological variables
         with st.expander("Meteorological Data"):
-            current_time_met = time.time()
-            time_last_changed = current_time_met - st.session_state.last_value_changed_time 
+            # current_time_met = time.time()
+            # time_last_changed = current_time_met - st.session_state.last_value_changed_time 
 
-            if time_last_changed >= DEBOUNCE:
-                st.session_state.last_value_changed_time = current_time_met
+            # if time_last_changed >= DEBOUNCE:
+            #     st.session_state.last_value_changed_time = current_time_met
             select_t = st.number_input(
                 f"{pollutant.upper()} Concentration (μg/m³)",
                 min_value=0.0, max_value=300.0,
