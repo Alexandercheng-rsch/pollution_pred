@@ -7,3 +7,4 @@ pydeck
 gdown
 xgboost
 scikit-learn
+category-encoders
