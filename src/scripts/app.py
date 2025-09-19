@@ -18,7 +18,7 @@ from matplotlib.colors import ListedColormap
 import os
 import gdown
 import warnings
-
+import gc
 warnings.filterwarnings("ignore")
 
 # --Ensure that the files are downloaded once.
@@ -193,6 +193,8 @@ with st.sidebar:
         #Select Pollutant
         select_pollution = st.selectbox('Pollutant', ['o3', 'PM2.5'])
         if select_pollution == 'PM2.5':
+            del o3_encoder; gc.collect()
+            del o3_model; gc.collect()
             pollutant = 'pm25'
             station_df = X_pm25_test[X_pm25_test['station'] ==f'{select_station}']
             bins = [0, 11, 23, 35, 41, 47, 53, 58, 64, 70]
@@ -210,7 +212,10 @@ with st.sidebar:
                 (80, '#8e44ad'),   
             ]
         else:
-            
+            del pm25_classifier_model; gc.collect()
+            del pm25_encoder; gc.collect()
+            del pm25_middle_model; gc.collect()
+            del pm25_upper_model; gc.collect()
             pollutant = 'o3'
             station_df = X_o3_test[X_o3_test['station'] ==f'{select_station}']
             
