@@ -52,65 +52,63 @@ def load_icon(path):
     return 'data:image/png;base64,' + base64.b64encode(file).decode()
 
 green_arrow = load_icon('src/icon/arrow.png')
+
+# -- Function for encoder dictionary
+@st.cache_data
+def get_encoder_dict(encoder_1, encoder_2):
+    encoders_dict = {
+    'o3': encoder_1,
+    'pm25': encoder_2
+}
+    return encoders_dict
 # -- Set page config
 apptitle = 'Air Quality Forecaster'
 
 # -- Load XG Models
 # -- o3 Model
-@st.cache_data
+@st.cache_resource
 def load_model_o3():
     with open('/mount/src/pollution_pred/pollution_data/models/xg_reg_o3.model', 'rb') as f:
         model = pickle.load(f)
     return model 
 
 # -- PM2.5 Classifier Model
-@st.cache_data
+@st.cache_resource
 def load_model_pm25_classifier():
     model = xgb.XGBClassifier()
     model.load_model('/mount/src/pollution_pred/pollution_data/models/binary_classifier.model')
     return model 
 
 # -- PM2.5 Middle Model
-@st.cache_data
+@st.cache_resource
 def load_model_pm25_middle():
     model = xgb.XGBRegressor()
     model.load_model('/mount/src/pollution_pred/pollution_data/models/xg_mid.model')
     return model 
 # -- PM2.5 Upper Model 
-@st.cache_data
+@st.cache_resource
 def load_model_pm25_upper():
     model = xgb.XGBRegressor()
     model.load_model('/mount/src/pollution_pred/pollution_data/models/xg_90.model')
     return model 
 
 # -- Initiate Models
-o3_model = load_model_o3()
-pm25_classifier_model = load_model_pm25_classifier()
-pm25_middle_model = load_model_pm25_middle()
-pm25_upper_model = load_model_pm25_upper()
-
-o3_model.set_params(tree_method='hist', device='cpu')
-pm25_classifier_model.set_params(tree_method='hist', device='cpu')
-pm25_middle_model.set_params(tree_method='hist', device='cpu')
-pm25_upper_model.set_params(tree_method='hist', device='cpu')
 
 # -- Load Target Encoders
 # -- o3 Model
-@st.cache_data
+@st.cache_resource
 def load_encoder_o3():
     with open('/mount/src/pollution_pred/pollution_data/models/encoder_o3.model', 'rb') as f:
         model = pickle.load(f)
     return model
 
 # -- PM2.5 Model
-@st.cache_data
+@st.cache_resource
 def load_encoder_pm25():
     with open('/mount/src/pollution_pred/pollution_data/models/encoder_pm25.model', 'rb') as f:
         model = pickle.load(f)
     return model
 
-o3_encoder = load_encoder_o3()
-pm25_encoder = load_encoder_pm25()
 
 st.set_page_config(page_title=apptitle, page_icon=':cloud:', layout='wide')
 
@@ -142,13 +140,13 @@ if 'random_date' not in st.session_state:
 # -- Detect offline station
 if 'station_off' not in st.session_state:
     st.session_state.station_off = True
+if 'pm25_loaded' not in st.session_state:
+    st.session_state.pm25_loaded = False
+if 'o3_loaded' not in st.session_state:
+    st.session_state.o3_loaded = False
 X_dfs = {
     'o3': X_o3_test,
     'pm25': X_pm25_test
-}
-encoders_dict = {
-    'o3': o3_encoder,
-    'pm25': pm25_encoder
 }
 # -- Main 
 st.title('Air Quality Forecaster 📈')
@@ -193,8 +191,18 @@ with st.sidebar:
         #Select Pollutant
         select_pollution = st.selectbox('Pollutant', ['o3', 'PM2.5'])
         if select_pollution == 'PM2.5':
-            del o3_encoder; gc.collect()
-            del o3_model; gc.collect()
+            pm25_classifier_model = load_model_pm25_classifier()
+            pm25_middle_model = load_model_pm25_middle()
+            pm25_upper_model = load_model_pm25_upper()
+            pm25_classifier_model.set_params(tree_method='hist', device='cpu')
+            pm25_middle_model.set_params(tree_method='hist', device='cpu')
+            pm25_upper_model.set_params(tree_method='hist', device='cpu')
+            pm25_encoder = load_encoder_pm25()
+            
+            if st.session_state.o3_loaded:
+                del o3_encoder; gc.collect()
+                del o3_model; gc.collect()
+                st.session_state.o3_loaded = False
             pollutant = 'pm25'
             station_df = X_pm25_test[X_pm25_test['station'] ==f'{select_station}']
             bins = [0, 11, 23, 35, 41, 47, 53, 58, 64, 70]
@@ -212,10 +220,15 @@ with st.sidebar:
                 (80, '#8e44ad'),   
             ]
         else:
-            del pm25_classifier_model; gc.collect()
-            del pm25_encoder; gc.collect()
-            del pm25_middle_model; gc.collect()
-            del pm25_upper_model; gc.collect()
+            o3_encoder = load_encoder_o3()
+            o3_model = load_model_o3()
+            o3_model.set_params(tree_method='hist', device='cpu')
+            if st.session_state.pm25_loaded:
+                del pm25_classifier_model; gc.collect()
+                del pm25_encoder; gc.collect()
+                del pm25_middle_model; gc.collect()
+                del pm25_upper_model; gc.collect()
+                st.session_state.pm25_loaded = False
             pollutant = 'o3'
             station_df = X_o3_test[X_o3_test['station'] ==f'{select_station}']
             
@@ -289,6 +302,8 @@ with st.sidebar:
 
         # Given information, start predicting 
         if st.button('Predict'):
+            encoders_dict = get_encoder_dict(o3_encoder, pm25_encoder)
+            
             with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
                 time.sleep(3)
             current_time = time.time()
