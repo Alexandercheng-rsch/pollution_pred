@@ -144,6 +144,9 @@ if 'pm25_loaded' not in st.session_state:
     st.session_state.pm25_loaded = False
 if 'o3_loaded' not in st.session_state:
     st.session_state.o3_loaded = False
+    
+if 'loaded' not in st.session_state:
+    st.session_state.loaded = False
 X_dfs = {
     'o3': X_o3_test,
     'pm25': X_pm25_test
