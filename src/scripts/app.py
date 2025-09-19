@@ -120,12 +120,17 @@ X_o3_test = load_data('/mount/src/pollution_pred/pollution_data/test/X_o3_test.p
 y_o3_test = load_data('/mount/src/pollution_pred/pollution_data/test/y_o3_test.p')
 X_pm25_test = load_data('/mount/src/pollution_pred/pollution_data/test/X_pm25_test.p')
 y_pm25_test = load_data('/mount/src/pollution_pred/pollution_data/test/y_pm25_test.p')
-station_coordinates = load_data('src/ect/location_coordinates.p')
-station_coordinates = pd.DataFrame(station_coordinates).T.reset_index()
-station_coordinates.columns = ['station', 'longitude', 'latitude']
-station_coordinates['longitude'] = station_coordinates['longitude'].astype(float)
-station_coordinates['latitude'] = station_coordinates['latitude'].astype(float)
 
+@st.cache_data
+def load_station_coordinates():
+    coords = load_data('src/ect/location_coordinates.p')
+    df = pd.DataFrame(coords).T.reset_index()
+    df.columns = ['station', 'longitude', 'latitude']
+    df['longitude'] = df['longitude'].astype(float)
+    df['latitude'] = df['latitude'].astype(float)
+    return df
+
+station_coordinates = load_station_coordinates()
 # -- Session States
 if 'last_execution' not in st.session_state:
     st.session_state.last_execution = 0
@@ -632,20 +637,24 @@ with col[1]:
 
     with cbar_col:
 
-        fig, ax = plt.subplots(figsize=(1.5, 3))
-        ax.set_visible(False)
-        
-        sm = cm.ScalarMappable(cmap=cmap_lines, norm=norm_lines)
-        sm.set_array([])
-        
-        cbar = plt.colorbar(sm, ax=ax, orientation='vertical')
-        cbar.set_label(f'{pollutant.upper()} (μg/m³)', rotation=270, labelpad=20)
-        
-        cbar.set_ticks(bins)
-        cbar.set_ticklabels(bins)
-        cbar.ax.tick_params(colors='white')  
-        cbar.ax.yaxis.label.set_color('white')  
-        cbar.outline.set_edgecolor('white') 
+        @st.cache_data
+        def create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant):
+            fig, ax = plt.subplots(figsize=(1.5, 3))
+            ax.set_visible(False)
+            
+            sm = cm.ScalarMappable(cmap=cmap_lines, norm=norm_lines)
+            sm.set_array([])
+            
+            cbar = plt.colorbar(sm, ax=ax, orientation='vertical')
+            cbar.set_label(f'{pollutant.upper()} (μg/m³)', rotation=270, labelpad=20)
+            cbar.set_ticks(bins)
+            cbar.set_ticklabels(bins)
+            cbar.ax.tick_params(colors='white')  
+            cbar.ax.yaxis.label.set_color('white')  
+            cbar.outline.set_edgecolor('white')
+            
+            return fig
+        fig = create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant)
         st.pyplot(fig, transparent=True)
         plt.close()
         
