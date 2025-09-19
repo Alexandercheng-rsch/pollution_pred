@@ -31,19 +31,14 @@ remove_step_number_input()
 if 'downloaded' not in st.session_state:
     st.session_state.downloaded = False
 if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
-    url_dict = {
-        'models': 'https://drive.google.com/drive/folders/1WKkq6uSr0_7cf3ckmv4UHeQtVHUjwhlI',
-        'test': 'https://drive.google.com/drive/folders/1wKzWDdU9jhjgKhkZ-kltl1_PXVZBPhJx'
-    }
-    file_name = ['models', 'test']
-    for k in file_name:
-        output = f"./pollution_data/{k}"  # Current directory
-        url = gdown.list_folder(url_dict[k])
+    url = ["https://drive.google.com/drive/folders/1WKkq6uSr0_7cf3ckmv4UHeQtVHUjwhlI", "https://drive.google.com/drive/folders/1wKzWDdU9jhjgKhkZ-kltl1_PXVZBPhJx"]
+    output = "./pollution_data"  # Current directory
+    os.makedirs(output, exist_ok=True)
+    for i, file in enumerate(url):
+        st.progress(i/len(url), text='Please wait, currently downloading model a')
+        gdown.download_folder(file, output=output, quiet=False)
         os.makedirs(output, exist_ok=True)
-        for i, file in enumerate(url):
-            st.progress(i/len(url), text=f'Please wait, currently downloading {k}...')
-            gdown.download_folder(file, output=output, quiet=False)
-            os.makedirs(output, exist_ok=True)
+        gdown.download_folder(url, output=output, quiet=False)
     st.session_state.downloaded = True
     
 # -- Cooldown for prediction button
