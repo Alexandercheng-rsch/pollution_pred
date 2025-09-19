@@ -146,6 +146,8 @@ if 'o3_loaded' not in st.session_state:
     st.session_state.o3_loaded = False
 if 'model_predicting' not in st.session_state:
     st.session_state.model_predicting = False
+if 'last_changed' not in st.session_state:
+    st.session_state.last_changed = 0
 X_dfs = {
     'o3': X_o3_test,
     'pm25': X_pm25_test
@@ -282,16 +284,18 @@ with st.sidebar:
                             )
 
         # Given information, start predicting 
-        if st.session_state.model_predicting:
-            disable_predictbutton = True
+        current_time = time.time()
+        time_left = current_time - st.session_state.last_changed
+        if time_left < 5:
+            disable_button = True
         else:
-            disable_predictbutton = False
-        if st.button('Predict', disabled=disable_predictbutton):
-            st.session_state.model_predicting = True
-            disable_predictbutton = True
+            disable_button = False
+        if st.button('Predict', disabled=disable_button):
+            disable_button = True
             with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
                 time.sleep(3)
             current_time = time.time()
+            st.session_state.last_changed = current_time
             time_since_clicked = current_time - st.session_state.last_execution
             plus_12 = predict_datetime + datetime.timedelta(hours=12)
             if time_since_clicked >= cooldown:
@@ -383,7 +387,6 @@ with st.sidebar:
                 st.session_state.model_predicting = False
                 disable_predictbutton = False
             else:
-                disable_predictbutton = False
                 remaining_time = cooldown - time_since_clicked
                 st.warning(f'Please wait for {remaining_time:.0f} seconds for your next prediction.')
 
