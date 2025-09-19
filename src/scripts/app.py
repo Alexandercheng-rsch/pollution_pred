@@ -20,6 +20,13 @@ import gdown
 import warnings
 import gc
 warnings.filterwarnings("ignore")
+st.markdown(
+       "<style>" +
+        ".element-container button.step-up { display: none; } " +
+        ".element-container button.step-down  { display: none; } " +
+        ".element-container div[data-baseweb] { border-radius: 4px; } "
+       "</style>"
+)
 
 # --Ensure that the files are downloaded once.
 if 'downloaded' not in st.session_state:
@@ -249,13 +256,6 @@ with st.sidebar:
             select_temp = st.slider('Temperature (°C)', -10, 45, value=int(row['temperature_2m']))
             select_sp = st.number_input('Surface Pressure (hPa)', min_value=float(900), max_value=float(1100), 
                                         step=0.01, value=float(row['surface_pressure']))       
-            st.markdown(
-                "<style>" +
-                    ".element-container button.step-up { display: none; } " +
-                    ".element-container button.step-down  { display: none; } " +
-                    ".element-container div[data-baseweb] { border-radius: 4px; } "
-                "</style>"
-            )
             select_pressure_msl = st.number_input('Mean Sea Level pressure (hPa)', min_value=float(900), max_value=float(1300), 
                                                   step=0.01, value=float(row['pressure_msl']))
             select_wind_speed = st.slider('Wind Speed (m/s)', float(0), float(70), step=0.01, value=float(row['wind_speed_10m']))
