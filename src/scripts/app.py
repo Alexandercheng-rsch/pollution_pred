@@ -40,17 +40,12 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
         "https://drive.google.com/uc?id=1ZXAIUHfCKy37E8fPANovri4yyzRVowN5"
     ]
     
-    url_test = [
-        "https://drive.google.com/uc?id=1dD5CohGL9jp3y_kCGKwEHkB2pMkXqSqu",
-        "https://drive.google.com/uc?id=1TUfv052yVfr3qr34wsETZM8gFGifjl27",
-        "https://drive.google.com/uc?id=1amy0T8czFfJjJBQ6rjzqofjwcZDuWF_0",
-        "https://drive.google.com/uc?id=1nc7YtacKPwpUFTX1LzZFUKHqAzcG35Li"
-    ]
+
     output = "./pollution_data/models"  # Current directory
     os.makedirs(output, exist_ok=True)
-    progress_bar = st.progress(0, text="Downloading models...")
+    progress_bar_1 = st.progress(0, text="Downloading models...")
     for i, file in enumerate(url_models):
-        progress_bar.progress(i / len(url_models), text=f"Downloading models ({i + 1}/{len(url_models)})")
+        progress_bar_1.progress((i + 1) / len(url_models), text=f"Downloading models ({i + 1}/{len(url_models)})")
         gdown.download(file, output=output, quiet=False)
     
     test_files = {
@@ -60,13 +55,15 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
         "1nc7YtacKPwpUFTX1LzZFUKHqAzcG35Li": "y_pm25_test.p",
     }
 
-    output_dir = "./pollution_data/test"
-    os.makedirs(output_dir, exist_ok=True)
-
-    for file_id, filename in test_files.items():
+    output_test = "./pollution_data/test"
+    os.makedirs(output_test, exist_ok=True)
+    progress_bar_2 = st.progress(0, text="Downloading test files...")
+    for i, (file_id, filename) in enumerate(test_files.items()):
         url = f"https://drive.google.com/uc?id={file_id}"
-        output_path = os.path.join(output_dir, filename)
-        gdown.download(url, output=output_path, quiet=False)
+        gdown.download(url, output=os.path.join(output_test, filename), quiet=False)
+        progress_bar_2.progress((i+1)/len(test_files), text=f"Downloading test files ({i+1}/{len(test_files)})")
+    progress_bar_1.empty()
+    progress_bar_2.empty()
     st.session_state.downloaded = True
 # -- Cooldown for prediction button
 cooldown = 5
