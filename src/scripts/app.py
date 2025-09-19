@@ -20,13 +20,6 @@ import gdown
 import warnings
 import gc
 warnings.filterwarnings("ignore")
-st.markdown(
-       "<style>" +
-        ".element-container button.step-up { display: none; } " +
-        ".element-container button.step-down  { display: none; } " +
-        ".element-container div[data-baseweb] { border-radius: 4px; } "
-       "</style>"
-)
 
 # --Ensure that the files are downloaded once.
 if 'downloaded' not in st.session_state:
@@ -186,6 +179,14 @@ station_list = ['Belfast Centre', 'Bexley - Belvedere West',
        'Stoke-on-Trent Centre', 'Waterloo Place (The Crown Estate)',
        'Wicken Fen', 'Wigan Centre', 'Wirral Tranmere', 'Yarner Wood',
        'York Bootham']
+
+st.markdown("""
+<style>
+    button.step-up {display: none;}
+    button.step-down {display: none;}
+    div[data-baseweb] {border-radius: 4px;}
+</style>""",
+unsafe_allow_html=True)
 
 # Select the station you want to predict
 with st.sidebar:
