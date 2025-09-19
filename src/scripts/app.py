@@ -153,8 +153,8 @@ if 'loaded' not in st.session_state:
 
 if 'last_value_changed_time' not in st.session_state:
     st.session_state.last_value_changed_time = 0
-
-    
+current_time = time.time()
+time_diff = current_time - st.session_state.last_value_changed_time
 X_dfs = {
     'o3': X_o3_test,
     'pm25': X_pm25_test
@@ -295,65 +295,58 @@ with st.sidebar:
 
         # Meteorological variables
         with st.expander("Meteorological Data"):
-            current_time_met = time.time()
-            time_last_changed = current_time_met - st.session_state.last_value_changed_time 
+            select_t = st.number_input(
+                f"{pollutant.upper()} Concentration (μg/m³)",
+                min_value=0.0, max_value=300.0,
+                step=0.1,
+                key=f"{pollutant}_concentration"
+            )
+            select_temp = st.slider(
+                "Temperature (°C)", -10, 45,
+                key="temperature"
+            )
+            select_sp = st.number_input(
+                "Surface Pressure (hPa)",
+                min_value=900.0, max_value=1100.0,
+                step=0.01,
+                key="surface_pressure"
+            )
+            select_pressure_msl = st.number_input(
+                "Mean Sea Level pressure (hPa)",
+                min_value=900.0, max_value=1300.0,
+                step=0.01,
+                key="pressure_msl"
+            )
+            select_wind_speed = st.slider(
+                "Wind Speed (m/s)", 0.0, 70.0,
+                step=0.1,
+                key="wind_speed"
+            )
+            select_wind_direction = st.slider(
+                "Wind Direction (°)", 0.0, 360.0,
+                step=1.0,
+                key="wind_direction"
+            )
+            select_rh = st.slider(
+                "Relative Humidity (%)", 0, 100,
+                key="relative_humidity"
+            )
+            select_precip = st.slider(
+                "Precipitation (mm)", 0.0, 50.0,
+                step=0.1,
+                key="precipitation"
+            )
+            select_rain = st.slider(
+                "Rain (mm)", 0.0, 2.0,
+                step=0.01,
+                key="rain"
+            )
+            select_shortwave_radiation = st.slider(
+                "Shortwave Radiation (W/m²)", 0.0, 1200.0,
+                step=1.0,
+                key="shortwave_radiation"
+            )
 
-            if time_last_changed >= DEBOUNCE:
-                st.session_state.last_value_changed_time = current_time_met
-                select_t = st.number_input(
-                    f"{pollutant.upper()} Concentration (μg/m³)",
-                    min_value=0.0, max_value=300.0,
-                    step=0.1,
-                    key=f"{pollutant}_concentration"
-                )
-                select_temp = st.slider(
-                    "Temperature (°C)", -10, 45,
-                    key="temperature"
-                )
-                select_sp = st.number_input(
-                    "Surface Pressure (hPa)",
-                    min_value=900.0, max_value=1100.0,
-                    step=0.01,
-                    key="surface_pressure"
-                )
-                select_pressure_msl = st.number_input(
-                    "Mean Sea Level pressure (hPa)",
-                    min_value=900.0, max_value=1300.0,
-                    step=0.01,
-                    key="pressure_msl"
-                )
-                select_wind_speed = st.slider(
-                    "Wind Speed (m/s)", 0.0, 70.0,
-                    step=0.1,
-                    key="wind_speed"
-                )
-                select_wind_direction = st.slider(
-                    "Wind Direction (°)", 0.0, 360.0,
-                    step=1.0,
-                    key="wind_direction"
-                )
-                select_rh = st.slider(
-                    "Relative Humidity (%)", 0, 100,
-                    key="relative_humidity"
-                )
-                select_precip = st.slider(
-                    "Precipitation (mm)", 0.0, 50.0,
-                    step=0.1,
-                    key="precipitation"
-                )
-                select_rain = st.slider(
-                    "Rain (mm)", 0.0, 2.0,
-                    step=0.01,
-                    key="rain"
-                )
-                select_shortwave_radiation = st.slider(
-                    "Shortwave Radiation (W/m²)", 0.0, 1200.0,
-                    step=1.0,
-                    key="shortwave_radiation"
-                )
-            else:
-                st.toast(f'Debounce Limit reached, try again in {DEBOUNCE - time_last_changed}')
-                
         selected_station_coords = station_coordinates[station_coordinates['station'] == select_station]
         #Hidden advance menu for lags/rolling features
         
@@ -631,135 +624,136 @@ with col[1]:
         st.altair_chart(chart)
 
     # -- End of session state loaded
-        layers = []
-        show_pins, show_wind_dir, show_pollution = st.columns([1, 1, 1])
-        with show_pins:
-            show_pins_checked = st.checkbox('Show Stations', value=True)
-        with show_wind_dir:
-            show_wind_dir_checked = st.checkbox('Show Wind Direction', value=True)
-        with show_pollution:
-            show_pollution_checked = st.checkbox('Show Pollution', value=True)
+        if time_diff >= 5:
+            layers = []
+            show_pins, show_wind_dir, show_pollution = st.columns([1, 1, 1])
+            with show_pins:
+                show_pins_checked = st.checkbox('Show Stations', value=True)
+            with show_wind_dir:
+                show_wind_dir_checked = st.checkbox('Show Wind Direction', value=True)
+            with show_pollution:
+                show_pollution_checked = st.checkbox('Show Pollution', value=True)
 
 
 
 
-        cmap_lines, norm_lines = cmap_continuous(cmap_list_lines)
-        colors = [rgb2hex(cmap_lines(norm_lines(v))) for v in station_coordinates_joined[f'{pollutant}'].values]
-        station_coordinates_joined['color'] = [
-            list(mcolors.to_rgba(c, alpha=0.8))[:3] + [200]  # [R,G,B,Alpha]
-            for c in colors
-        ]
-        station_coordinates_joined['color'] = station_coordinates_joined['color'].apply(lambda x: [int(c * 255) for c in x])
-        cmap = ListedColormap(station_coordinates_joined['color'].values)
+            cmap_lines, norm_lines = cmap_continuous(cmap_list_lines)
+            colors = [rgb2hex(cmap_lines(norm_lines(v))) for v in station_coordinates_joined[f'{pollutant}'].values]
+            station_coordinates_joined['color'] = [
+                list(mcolors.to_rgba(c, alpha=0.8))[:3] + [200]  # [R,G,B,Alpha]
+                for c in colors
+            ]
+            station_coordinates_joined['color'] = station_coordinates_joined['color'].apply(lambda x: [int(c * 255) for c in x])
+            cmap = ListedColormap(station_coordinates_joined['color'].values)
 
-        icon_data = {
-            'url': 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
-            'width': 128,
-            'height': 128,
-            'anchorY': 128,
-        }
+            icon_data = {
+                'url': 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
+                'width': 128,
+                'height': 128,
+                'anchorY': 128,
+            }
 
-        arrow_icon = {
-            'url': green_arrow,
-            'width': 128,
-            'height': 128,
-            'anchorY': 64,
-            'anchorX': 64 
-        }
+            arrow_icon = {
+                'url': green_arrow,
+                'width': 128,
+                'height': 128,
+                'anchorY': 64,
+                'anchorX': 64 
+            }
 
-        station_coordinates_joined['icon_pin'] = [icon_data for _ in range(len(station_coordinates_joined))]
-        station_coordinates_joined['latitude_scale'] = station_coordinates_joined['latitude'] - 0.0006
+            station_coordinates_joined['icon_pin'] = [icon_data for _ in range(len(station_coordinates_joined))]
+            station_coordinates_joined['latitude_scale'] = station_coordinates_joined['latitude'] - 0.0006
 
-        view_state = pdk.ViewState(
-            latitude=float(selected_station_coords['latitude']), longitude=float(selected_station_coords['longitude']), controller=True, zoom=14, pitch=0,
+            view_state = pdk.ViewState(
+                latitude=float(selected_station_coords['latitude']), longitude=float(selected_station_coords['longitude']), controller=True, zoom=14, pitch=0,
 
-        )
-
-        station_coordinates_joined['icon_arrow'] = [arrow_icon for _ in range(len(station_coordinates_joined))]
-        if show_pollution_checked:
-            pollution_layer = pdk.Layer(
-                'ScatterplotLayer',
-                station_coordinates_joined.dropna(subset=[f'{pollutant}']),
-                get_position=['longitude', 'latitude'],
-                get_radius=f'{pollutant}',
-                radius_scale=50,  # Adjust to make circles appropriate size
-                radius_min_pixels=20,  # Minimum circle size
-                radius_max_pixels=100,  # Maximum circle size
-                get_fill_color='color',
-                pickable=True,
-                stroked=True,
-                get_line_color=[255, 255, 255],
-                line_width_min_pixels=1,
-                opacity=0.4
-            )
-            layers.append(pollution_layer)
-            
-        if show_wind_dir_checked:
-            wind_layer = pdk.Layer(
-                'IconLayer',
-                data=station_coordinates_joined[station_coordinates_joined['wind_direction_10m'].notna()],
-                get_icon='icon_arrow',
-                get_size=20,
-                get_position=['longitude', 'latitude_scale'],
-                get_angle='wind_direction_10m',
-                opacity=1
-            )
-            layers.append(wind_layer)
-        if show_pins_checked:
-            point_layer = pdk.Layer(
-                'IconLayer',
-                data=station_coordinates_joined,
-                get_icon='icon_pin',
-                get_size=40,
-                get_position=['longitude', 'latitude'],
-                pickable=True,
-                # auto_highlight=True,
-                # get_radius=200,
-                
-            )
-            layers.append(point_layer)
-
-
-
-
-        map_col, cbar_col = st.columns([4, 1]) 
-
-        with map_col:
-            event = st.pydeck_chart(
-                pdk.Deck(
-                    layers,
-                    initial_view_state=view_state,
-                    tooltip={'text': 'Station: {station}' f'\n Pollution: {{{pollutant}}}'},
-                ),
-                on_select='rerun', 
-                selection_mode='multi-object'
             )
 
-        with cbar_col:
-            @st.cache_data(hash_funcs={
-            type(cmap_lines): lambda x: str(x.__class__.__name__),
-            type(norm_lines): lambda x: str(x.__class__.__name__)})
-            
-            def create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant):
-                fig, ax = plt.subplots(figsize=(1.5, 3))
-                ax.set_visible(False)
+            station_coordinates_joined['icon_arrow'] = [arrow_icon for _ in range(len(station_coordinates_joined))]
+            if show_pollution_checked:
+                pollution_layer = pdk.Layer(
+                    'ScatterplotLayer',
+                    station_coordinates_joined.dropna(subset=[f'{pollutant}']),
+                    get_position=['longitude', 'latitude'],
+                    get_radius=f'{pollutant}',
+                    radius_scale=50,  # Adjust to make circles appropriate size
+                    radius_min_pixels=20,  # Minimum circle size
+                    radius_max_pixels=100,  # Maximum circle size
+                    get_fill_color='color',
+                    pickable=True,
+                    stroked=True,
+                    get_line_color=[255, 255, 255],
+                    line_width_min_pixels=1,
+                    opacity=0.4
+                )
+                layers.append(pollution_layer)
                 
-                sm = cm.ScalarMappable(cmap=cmap_lines, norm=norm_lines)
-                sm.set_array([])
-                
-                cbar = plt.colorbar(sm, ax=ax, orientation='vertical')
-                cbar.set_label(f'{pollutant.upper()} (μg/m³)', rotation=270, labelpad=20)
-                cbar.set_ticks(bins)
-                cbar.set_ticklabels(bins)
-                cbar.ax.tick_params(colors='white')  
-                cbar.ax.yaxis.label.set_color('white')  
-                cbar.outline.set_edgecolor('white')
-                
-                return fig
-            fig = create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant)
-            st.pyplot(fig, transparent=True)
-            plt.close()
-            
-        event.selection
+            if show_wind_dir_checked:
+                wind_layer = pdk.Layer(
+                    'IconLayer',
+                    data=station_coordinates_joined[station_coordinates_joined['wind_direction_10m'].notna()],
+                    get_icon='icon_arrow',
+                    get_size=20,
+                    get_position=['longitude', 'latitude_scale'],
+                    get_angle='wind_direction_10m',
+                    opacity=1
+                )
+                layers.append(wind_layer)
+            if show_pins_checked:
+                point_layer = pdk.Layer(
+                    'IconLayer',
+                    data=station_coordinates_joined,
+                    get_icon='icon_pin',
+                    get_size=40,
+                    get_position=['longitude', 'latitude'],
+                    pickable=True,
+                    # auto_highlight=True,
+                    # get_radius=200,
+                    
+                )
+                layers.append(point_layer)
 
-    
+
+
+
+            map_col, cbar_col = st.columns([4, 1]) 
+
+            with map_col:
+                event = st.pydeck_chart(
+                    pdk.Deck(
+                        layers,
+                        initial_view_state=view_state,
+                        tooltip={'text': 'Station: {station}' f'\n Pollution: {{{pollutant}}}'},
+                    ),
+                    on_select='rerun', 
+                    selection_mode='multi-object'
+                )
+
+            with cbar_col:
+                @st.cache_data(hash_funcs={
+                type(cmap_lines): lambda x: str(x.__class__.__name__),
+                type(norm_lines): lambda x: str(x.__class__.__name__)})
+                
+                def create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant):
+                    fig, ax = plt.subplots(figsize=(1.5, 3))
+                    ax.set_visible(False)
+                    
+                    sm = cm.ScalarMappable(cmap=cmap_lines, norm=norm_lines)
+                    sm.set_array([])
+                    
+                    cbar = plt.colorbar(sm, ax=ax, orientation='vertical')
+                    cbar.set_label(f'{pollutant.upper()} (μg/m³)', rotation=270, labelpad=20)
+                    cbar.set_ticks(bins)
+                    cbar.set_ticklabels(bins)
+                    cbar.ax.tick_params(colors='white')  
+                    cbar.ax.yaxis.label.set_color('white')  
+                    cbar.outline.set_edgecolor('white')
+                    
+                    return fig
+                fig = create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant)
+                st.pyplot(fig, transparent=True)
+                plt.close()
+                
+            event.selection
+
+st.session_state.last_value_changed_time = time.time()
