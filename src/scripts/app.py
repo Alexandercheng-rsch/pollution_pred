@@ -39,15 +39,17 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
                 "https://drive.google.com/file/d/1amy0T8czFfJjJBQ6rjzqofjwcZDuWF_0", "https://drive.google.com/file/d/1nc7YtacKPwpUFTX1LzZFUKHqAzcG35Li"]
     output = "./pollution_data/models"  # Current directory
     os.makedirs(output, exist_ok=True)
+    progress_bar = st.progress(0, text="Downloading models...")
     for i, file in enumerate(url_models):
-        st.progress(i/len(url_models), text='Please wait, currently downloading models')
+        progress_bar.progress(i / len(url_models), text=f"Downloading models ({i}/{len(url_models)})")
         gdown.download(file, output=output, quiet=False)
         os.makedirs(output, exist_ok=True)
     
     output = "./pollution_data/test"  # Current directory
     os.makedirs(output, exist_ok=True)
+    progress_bar = st.progress(0, text="Downloading test files...")
     for i, file in enumerate(url_test):
-        st.progress(i/len(url_test), text='Please wait, currently downloading models')
+        progress_bar.progress(i / len(url_test), text=f"Downloading test ({i}/{len(url_test)})")
         gdown.download(file, output=output, quiet=False)
         os.makedirs(output, exist_ok=True)
     st.session_state.downloaded = True
