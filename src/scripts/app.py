@@ -20,7 +20,13 @@ import gdown
 import warnings
 import gc
 warnings.filterwarnings("ignore")
-
+def remove_step_number_input():
+    st.markdown("""
+                <style>
+                    .st-emotion-cache-1k5fi8b eaba2yi1 {display: none;}
+                </style>""",
+                unsafe_allow_html=True)
+remove_step_number_input()
 # --Ensure that the files are downloaded once.
 if 'downloaded' not in st.session_state:
     st.session_state.downloaded = False
@@ -246,14 +252,6 @@ with st.sidebar:
         with st.expander('Meteorlogical Data'):
             select_t = st.number_input(f'{pollutant.upper()} Concentration (μg/m³)', float(0), float(300), 
                                        step=0.1, value=float(np.expm1(row[f'{pollutant}'])))
-            st.markdown(
-                "<style>" +
-                    ".element-container button.step-up { display: none; } " +
-                    ".element-container button.step-down  { display: none; } " +
-                    ".element-container div[data-baseweb] { border-radius: 4px; } "
-                "</style>"
-                , unsafe_allow_html=True
-            )
             select_temp = st.slider('Temperature (°C)', -10, 45, value=int(row['temperature_2m']))
             select_sp = st.number_input('Surface Pressure (hPa)', min_value=float(900), max_value=float(1100), 
                                         step=0.01, value=float(row['surface_pressure']))       
