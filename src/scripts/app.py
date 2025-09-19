@@ -177,6 +177,8 @@ if 'model_predicting' not in st.session_state:
     st.session_state.model_predicting = False
 if 'last_changed' not in st.session_state:
     st.session_state.last_changed = 0
+if 'cooldown' not in st.session_state:
+    st.session_state.cooldown = 0
 X_dfs = {
     'o3': X_o3_test,
     'pm25': X_pm25_test
@@ -322,7 +324,7 @@ with st.sidebar:
             disable_button = True
             st.session_state.last_changed = time.time()
             st.session_state.last_execution = current_time
-            time_since_clicked = current_time - st.session_state.last_execution
+            time_since_clicked = current_time - st.session_state.cooldown
             plus_12 = predict_datetime + datetime.timedelta(hours=12)
             if time_since_clicked >= cooldown:
                 with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
@@ -355,6 +357,7 @@ with st.sidebar:
                     st.session_state.o3_loaded = True
                 st.session_state.loaded = True
                 st.session_state.last_execution = current_time
+                st.session_state.cooldown = current_time
                 st.success(f'Predicting {select_pollution} for {select_station}')
                 st.write(f'Date/Time: {selected_date_predict} {select_time_predict}')
                 st.write(f'Temperature: {select_temp}°C')
