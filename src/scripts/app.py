@@ -151,7 +151,7 @@ X_dfs = {
     'o3': X_o3_test,
     'pm25': X_pm25_test
 }
-
+st.session_state.loaded = False
 # -- Main 
 st.title('Air Quality Forecaster 📈')
 st.subheader('12-Hour Ahead PM2.5 & O3 Prediction')
@@ -553,7 +553,6 @@ with col[1]:
         placeholder.altair_chart(chart, use_container_width=True)
 
     if st.session_state.loaded:
-        
         end_interval = predict_datetime + datetime.timedelta(hours=13)
 
         data = np.expm1(station_df.loc[predict_datetime.isoformat():end_interval.isoformat()][f'{pollutant}']) # Need to make sure to remove log transformation so it's clearer for the user
