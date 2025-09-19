@@ -284,6 +284,8 @@ with st.sidebar:
         # Given information, start predicting 
         if st.session_state.model_predicting:
             disable_predictbutton = True
+        else:
+            disable_predictbutton = False
         if st.button('Predict', disabled=disable_predictbutton):
             st.session_state.model_predicting = True
             with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
