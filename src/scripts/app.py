@@ -348,11 +348,11 @@ with st.sidebar:
                     step=1.0,
                     key="shortwave_radiation"
                 )
-        form_submitted = st.form_submit_button(
-            "Update Meteorological Parameters", 
-            type="primary",
-            use_container_width=True
-        )
+                form_submitted = st.form_submit_button(
+                    "Update Meteorological Parameters", 
+                    type="primary",
+                    use_container_width=True
+                )
         if form_submitted:
             st.success("Parameters updated successfully!")
             
