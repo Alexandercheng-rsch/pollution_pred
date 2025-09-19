@@ -38,9 +38,6 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
     
 # -- Cooldown for prediction button
 cooldown = 5
-
-# -- DEBOUNCE TIME
-DEBOUNCE = 3
 # -- Loading valid dates and test data
 @st.cache_data
 def load_data(path):
@@ -147,19 +144,12 @@ if 'pm25_loaded' not in st.session_state:
     st.session_state.pm25_loaded = False
 if 'o3_loaded' not in st.session_state:
     st.session_state.o3_loaded = False
-    
-if 'loaded' not in st.session_state:
-    st.session_state.loaded = False
-
-if 'last_value_changed_time' not in st.session_state:
-    st.session_state.last_value_changed_time = 0
-
-    
+if 'model_predicting' not in st.session_state:
+    st.session_state.model_predicting = True
 X_dfs = {
     'o3': X_o3_test,
     'pm25': X_pm25_test
 }
-st.session_state.loaded = False
 # -- Main 
 st.title('Air Quality Forecaster 📈')
 st.subheader('12-Hour Ahead PM2.5 & O3 Prediction')
@@ -190,6 +180,7 @@ station_list = ['Belfast Centre', 'Bexley - Belvedere West',
 
 # Select the station you want to predict
 with st.sidebar:
+    st.session_state.loaded = False 
     st.title('Select Content')
     tab1, tab2 = st.tabs(['Forecaster', 'Terminology and Q&A'])
 
@@ -202,19 +193,6 @@ with st.sidebar:
         #Select Pollutant
         select_pollution = st.selectbox('Pollutant', ['o3', 'PM2.5'])
         if select_pollution == 'PM2.5':
-            pm25_classifier_model = load_model_pm25_classifier()
-            pm25_middle_model = load_model_pm25_middle()
-            pm25_upper_model = load_model_pm25_upper()
-            pm25_classifier_model.set_params(tree_method='hist', device='cpu')
-            pm25_middle_model.set_params(tree_method='hist', device='cpu')
-            pm25_upper_model.set_params(tree_method='hist', device='cpu')
-            pm25_encoder = load_encoder_pm25()
-            
-            encoder = pm25_encoder
-            if st.session_state.o3_loaded:
-                del o3_encoder; gc.collect()
-                del o3_model; gc.collect()
-                st.session_state.o3_loaded = False
             pollutant = 'pm25'
             station_df = X_pm25_test[X_pm25_test['station'] ==f'{select_station}']
             bins = [0, 11, 23, 35, 41, 47, 53, 58, 64, 70]
@@ -232,17 +210,7 @@ with st.sidebar:
                 (80, '#8e44ad'),   
             ]
         else:
-            o3_encoder = load_encoder_o3()
-            o3_model = load_model_o3()
-            o3_model.set_params(tree_method='hist', device='cpu')
-            if st.session_state.pm25_loaded:
-                del pm25_classifier_model; gc.collect()
-                del pm25_encoder; gc.collect()
-                del pm25_middle_model; gc.collect()
-                del pm25_upper_model; gc.collect()
-                st.session_state.pm25_loaded = False
             pollutant = 'o3'
-            encoder = o3_encoder
             station_df = X_o3_test[X_o3_test['station'] ==f'{select_station}']
             
             cmap_list_lines = [
@@ -271,88 +239,23 @@ with st.sidebar:
         else:
             st.session_state.station_off = False
             row = station_df.loc[predict_datetime.isoformat()]
-
-        if f"{pollutant}_concentration" not in st.session_state:
-            st.session_state[f"{pollutant}_concentration"] = float(np.expm1(row[f'{pollutant}']))
-        if "temperature" not in st.session_state:
-            st.session_state["temperature"] = int(row["temperature_2m"])
-        if "surface_pressure" not in st.session_state:
-            st.session_state["surface_pressure"] = float(row["surface_pressure"])
-        if "pressure_msl" not in st.session_state:
-            st.session_state["pressure_msl"] = float(row["pressure_msl"])
-        if "wind_speed" not in st.session_state:
-            st.session_state["wind_speed"] = float(row["wind_speed_10m"])
-        if "wind_direction" not in st.session_state:
-            st.session_state["wind_direction"] = float(row["wind_direction_10m"])
-        if "relative_humidity" not in st.session_state:
-            st.session_state["relative_humidity"] = int(row["relative_humidity_2m"])
-        if "precipitation" not in st.session_state:
-            st.session_state["precipitation"] = float(row["precipitation"])
-        if "rain" not in st.session_state:
-            st.session_state["rain"] = float(row["rain"])
-        if "shortwave_radiation" not in st.session_state:
-            st.session_state["shortwave_radiation"] = float(row["shortwave_radiation"])
-
+            
         # Meteorological variables
-        with st.expander("Meteorological Data"):
-            # current_time_met = time.time()
-            # time_last_changed = current_time_met - st.session_state.last_value_changed_time 
-
-            # if time_last_changed >= DEBOUNCE:
-            #     st.session_state.last_value_changed_time = current_time_met
-            select_t = st.number_input(
-                f"{pollutant.upper()} Concentration (μg/m³)",
-                min_value=0.0, max_value=300.0,
-                step=0.1,
-                key=f"{pollutant}_concentration"
-            )
-            select_temp = st.slider(
-                "Temperature (°C)", -10, 45,
-                key="temperature"
-            )
-            select_sp = st.number_input(
-                "Surface Pressure (hPa)",
-                min_value=900.0, max_value=1100.0,
-                step=0.01,
-                key="surface_pressure"
-            )
-            select_pressure_msl = st.number_input(
-                "Mean Sea Level pressure (hPa)",
-                min_value=900.0, max_value=1300.0,
-                step=0.01,
-                key="pressure_msl"
-            )
-            select_wind_speed = st.slider(
-                "Wind Speed (m/s)", 0.0, 70.0,
-                step=0.1,
-                key="wind_speed"
-            )
-            select_wind_direction = st.slider(
-                "Wind Direction (°)", 0.0, 360.0,
-                step=1.0,
-                key="wind_direction"
-            )
-            select_rh = st.slider(
-                "Relative Humidity (%)", 0, 100,
-                key="relative_humidity"
-            )
-            select_precip = st.slider(
-                "Precipitation (mm)", 0.0, 50.0,
-                step=0.1,
-                key="precipitation"
-            )
-            select_rain = st.slider(
-                "Rain (mm)", 0.0, 2.0,
-                step=0.01,
-                key="rain"
-            )
-            select_shortwave_radiation = st.slider(
-                "Shortwave Radiation (W/m²)", 0.0, 1200.0,
-                step=1.0,
-                key="shortwave_radiation"
-            )
-
-
+        with st.expander('Meteorlogical Data'):
+            select_t = st.number_input(f'{pollutant.upper()} Concentration (μg/m³)', float(0), float(300), 
+                                       step=0.1, value=float(np.expm1(row[f'{pollutant}'])))
+            select_temp = st.slider('Temperature (°C)', -10, 45, value=int(row['temperature_2m']))
+            select_sp = st.number_input('Surface Pressure (hPa)', min_value=float(900), max_value=float(1100), 
+                                        step=0.01, value=float(row['surface_pressure']))        
+            select_pressure_msl = st.number_input('Mean Sea Level pressure (hPa)', min_value=float(900), max_value=float(1300), 
+                                                  step=0.01, value=float(row['pressure_msl']))
+            select_wind_speed = st.slider('Wind Speed (m/s)', float(0), float(70), step=0.01, value=float(row['wind_speed_10m']))
+            select_wind_direction = st.slider('Wind Direction (°)', float(0), float(360), step=0.01, value=float(row['wind_direction_10m']))
+            select_rh = st.slider('Relative Humidity (%)', 0, 100, value=int(row['relative_humidity_2m']))
+            select_precip = st.slider('Precipitation (mm)', 0.0, 50.0, value=row['precipitation'])
+            select_rain = st.slider('Rain mm (inch)', float(0), float(2), step=0.01, value=float(row['rain']))
+            select_shortwave_radiation = st.slider('Shortwave Radiation (W/m²)', float(0), float(1200), step=0.01, 
+                                                   value=float(row['shortwave_radiation']))
         selected_station_coords = station_coordinates[station_coordinates['station'] == select_station]
         #Hidden advance menu for lags/rolling features
         
@@ -379,13 +282,42 @@ with st.sidebar:
                             )
 
         # Given information, start predicting 
-        if st.button('Predict'):
+        if st.session_state.model_predicting:
+            disable_predictbutton = True
+        if st.button('Predict', disabled=disable_predictbutton):
+            st.session_state.model_predicting = True
+            with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
+                time.sleep(3)
             current_time = time.time()
             time_since_clicked = current_time - st.session_state.last_execution
             plus_12 = predict_datetime + datetime.timedelta(hours=12)
             if time_since_clicked >= cooldown:
-                with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
-                    time.sleep(3)
+                if select_pollution == 'PM2.5':
+                    pm25_classifier_model = load_model_pm25_classifier()
+                    pm25_middle_model = load_model_pm25_middle()
+                    pm25_upper_model = load_model_pm25_upper()
+                    pm25_classifier_model.set_params(tree_method='hist', device='cpu')
+                    pm25_middle_model.set_params(tree_method='hist', device='cpu')
+                    pm25_upper_model.set_params(tree_method='hist', device='cpu')
+                    pm25_encoder = load_encoder_pm25()
+                    st.session_state.pm25_loaded = True
+                    encoder = pm25_encoder
+                    if st.session_state.o3_loaded:
+                        del o3_encoder; gc.collect()
+                        del o3_model; gc.collect()
+                        st.session_state.o3_loaded = False
+                else:
+                    o3_encoder = load_encoder_o3()
+                    o3_model = load_model_o3()
+                    o3_model.set_params(tree_method='hist', device='cpu')
+                    encoder = o3_encoder
+                    if st.session_state.pm25_loaded:
+                        del pm25_classifier_model; gc.collect()
+                        del pm25_encoder; gc.collect()
+                        del pm25_middle_model; gc.collect()
+                        del pm25_upper_model; gc.collect()
+                        st.session_state.pm25_loaded = False
+                    st.session_state.o3_loaded = True
                 st.session_state.loaded = True
                 st.session_state.last_execution = current_time
                 st.success(f'Predicting {select_pollution} for {select_station}')
@@ -445,11 +377,13 @@ with st.sidebar:
                         label=f'Predicted {pollutant} Concentration (µg/m³) at {plus_12.time()}, {plus_12.date()}',
                         value=f'{prediction:.2f}'
                 )
-                
+                st.session_state.model_predicting = False
+                disable_predictbutton = False
             else:
+                disable_predictbutton = True
                 remaining_time = cooldown - time_since_clicked
                 st.warning(f'Please wait for {remaining_time:.0f} seconds for your next prediction.')
-                st.session_state.loaded = False
+
     with tab2:
         with st.expander('Metorlogy Terminology'):
             st.markdown(" - Wind Speed: Wind speed at 10m above ground")
@@ -517,7 +451,7 @@ with st.sidebar:
         with st.expander("Why is the app so slow?"):
             st.text("Due to the limited resources on Streamlit community, I had to make some major UX changes for example adding debouncing and including session states to show the graph and plot when the code is executed. In addition, due to the size of each model, it already takes over 600 MB of RAM which is 60(%) of usage already. If a user spammed the predict button or any button, the models will load 'x' amount of times which will cause a memory leakage and in turn crash the app. I, as the the author will have to manually restart the app, as it will not restart itself. As a note, please be nice and try not to spam the app :).")
         with st.expander("What models are you using?"):
-            st.text('xg')
+            st.text("")
 # -- Get a DF of the stations for the selected date and hour
 @st.cache_data
 def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
@@ -571,6 +505,7 @@ with col[1]:
         placeholder.altair_chart(chart, use_container_width=True)
 
     if st.session_state.loaded:
+        
         end_interval = predict_datetime + datetime.timedelta(hours=13)
 
         data = np.expm1(station_df.loc[predict_datetime.isoformat():end_interval.isoformat()][f'{pollutant}']) # Need to make sure to remove log transformation so it's clearer for the user
@@ -630,135 +565,135 @@ with col[1]:
         st.altair_chart(chart)
 
     # -- End of session state loaded
-        layers = []
-        show_pins, show_wind_dir, show_pollution = st.columns([1, 1, 1])
-        with show_pins:
-            show_pins_checked = st.checkbox('Show Stations', value=True)
-        with show_wind_dir:
-            show_wind_dir_checked = st.checkbox('Show Wind Direction', value=True)
-        with show_pollution:
-            show_pollution_checked = st.checkbox('Show Pollution', value=True)
+    layers = []
+    show_pins, show_wind_dir, show_pollution = st.columns([1, 1, 1])
+    with show_pins:
+        show_pins_checked = st.checkbox('Show Stations', value=True)
+    with show_wind_dir:
+        show_wind_dir_checked = st.checkbox('Show Wind Direction', value=True)
+    with show_pollution:
+        show_pollution_checked = st.checkbox('Show Pollution', value=True)
 
 
 
 
-        cmap_lines, norm_lines = cmap_continuous(cmap_list_lines)
-        colors = [rgb2hex(cmap_lines(norm_lines(v))) for v in station_coordinates_joined[f'{pollutant}'].values]
-        station_coordinates_joined['color'] = [
-            list(mcolors.to_rgba(c, alpha=0.8))[:3] + [200]  # [R,G,B,Alpha]
-            for c in colors
-        ]
-        station_coordinates_joined['color'] = station_coordinates_joined['color'].apply(lambda x: [int(c * 255) for c in x])
-        cmap = ListedColormap(station_coordinates_joined['color'].values)
+    cmap_lines, norm_lines = cmap_continuous(cmap_list_lines)
+    colors = [rgb2hex(cmap_lines(norm_lines(v))) for v in station_coordinates_joined[f'{pollutant}'].values]
+    station_coordinates_joined['color'] = [
+        list(mcolors.to_rgba(c, alpha=0.8))[:3] + [200]  # [R,G,B,Alpha]
+        for c in colors
+    ]
+    station_coordinates_joined['color'] = station_coordinates_joined['color'].apply(lambda x: [int(c * 255) for c in x])
+    cmap = ListedColormap(station_coordinates_joined['color'].values)
 
-        icon_data = {
-            'url': 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
-            'width': 128,
-            'height': 128,
-            'anchorY': 128,
-        }
+    icon_data = {
+        'url': 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
+        'width': 128,
+        'height': 128,
+        'anchorY': 128,
+    }
 
-        arrow_icon = {
-            'url': green_arrow,
-            'width': 128,
-            'height': 128,
-            'anchorY': 64,
-            'anchorX': 64 
-        }
+    arrow_icon = {
+        'url': green_arrow,
+        'width': 128,
+        'height': 128,
+        'anchorY': 64,
+        'anchorX': 64 
+    }
 
-        station_coordinates_joined['icon_pin'] = [icon_data for _ in range(len(station_coordinates_joined))]
-        station_coordinates_joined['latitude_scale'] = station_coordinates_joined['latitude'] - 0.0006
+    station_coordinates_joined['icon_pin'] = [icon_data for _ in range(len(station_coordinates_joined))]
+    station_coordinates_joined['latitude_scale'] = station_coordinates_joined['latitude'] - 0.0006
 
-        view_state = pdk.ViewState(
-            latitude=float(selected_station_coords['latitude']), longitude=float(selected_station_coords['longitude']), controller=True, zoom=14, pitch=0,
+    view_state = pdk.ViewState(
+        latitude=float(selected_station_coords['latitude']), longitude=float(selected_station_coords['longitude']), controller=True, zoom=14, pitch=0,
 
+    )
+
+    station_coordinates_joined['icon_arrow'] = [arrow_icon for _ in range(len(station_coordinates_joined))]
+    if show_pollution_checked:
+        pollution_layer = pdk.Layer(
+            'ScatterplotLayer',
+            station_coordinates_joined.dropna(subset=[f'{pollutant}']),
+            get_position=['longitude', 'latitude'],
+            get_radius=f'{pollutant}',
+            radius_scale=50,  # Adjust to make circles appropriate size
+            radius_min_pixels=20,  # Minimum circle size
+            radius_max_pixels=100,  # Maximum circle size
+            get_fill_color='color',
+            pickable=True,
+            stroked=True,
+            get_line_color=[255, 255, 255],
+            line_width_min_pixels=1,
+            opacity=0.4
+        )
+        layers.append(pollution_layer)
+        
+    if show_wind_dir_checked:
+        wind_layer = pdk.Layer(
+            'IconLayer',
+            data=station_coordinates_joined[station_coordinates_joined['wind_direction_10m'].notna()],
+            get_icon='icon_arrow',
+            get_size=20,
+            get_position=['longitude', 'latitude_scale'],
+            get_angle='wind_direction_10m',
+            opacity=1
+        )
+        layers.append(wind_layer)
+    if show_pins_checked:
+        point_layer = pdk.Layer(
+            'IconLayer',
+            data=station_coordinates_joined,
+            get_icon='icon_pin',
+            get_size=40,
+            get_position=['longitude', 'latitude'],
+            pickable=True,
+            # auto_highlight=True,
+            # get_radius=200,
+            
+        )
+        layers.append(point_layer)
+
+
+
+
+    map_col, cbar_col = st.columns([4, 1]) 
+
+    with map_col:
+        event = st.pydeck_chart(
+            pdk.Deck(
+                layers,
+                initial_view_state=view_state,
+                tooltip={'text': 'Station: {station}' f'\n Pollution: {{{pollutant}}}'},
+            ),
+            on_select='rerun', 
+            selection_mode='multi-object'
         )
 
-        station_coordinates_joined['icon_arrow'] = [arrow_icon for _ in range(len(station_coordinates_joined))]
-        if show_pollution_checked:
-            pollution_layer = pdk.Layer(
-                'ScatterplotLayer',
-                station_coordinates_joined.dropna(subset=[f'{pollutant}']),
-                get_position=['longitude', 'latitude'],
-                get_radius=f'{pollutant}',
-                radius_scale=50,  # Adjust to make circles appropriate size
-                radius_min_pixels=20,  # Minimum circle size
-                radius_max_pixels=100,  # Maximum circle size
-                get_fill_color='color',
-                pickable=True,
-                stroked=True,
-                get_line_color=[255, 255, 255],
-                line_width_min_pixels=1,
-                opacity=0.4
-            )
-            layers.append(pollution_layer)
+    with cbar_col:
+        @st.cache_data(hash_funcs={
+        type(cmap_lines): lambda x: str(x.__class__.__name__),
+        type(norm_lines): lambda x: str(x.__class__.__name__)})
+        
+        def create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant):
+            fig, ax = plt.subplots(figsize=(1.5, 3))
+            ax.set_visible(False)
             
-        if show_wind_dir_checked:
-            wind_layer = pdk.Layer(
-                'IconLayer',
-                data=station_coordinates_joined[station_coordinates_joined['wind_direction_10m'].notna()],
-                get_icon='icon_arrow',
-                get_size=20,
-                get_position=['longitude', 'latitude_scale'],
-                get_angle='wind_direction_10m',
-                opacity=1
-            )
-            layers.append(wind_layer)
-        if show_pins_checked:
-            point_layer = pdk.Layer(
-                'IconLayer',
-                data=station_coordinates_joined,
-                get_icon='icon_pin',
-                get_size=40,
-                get_position=['longitude', 'latitude'],
-                pickable=True,
-                # auto_highlight=True,
-                # get_radius=200,
-                
-            )
-            layers.append(point_layer)
-
-
-
-
-        map_col, cbar_col = st.columns([4, 1]) 
-
-        with map_col:
-            event = st.pydeck_chart(
-                pdk.Deck(
-                    layers,
-                    initial_view_state=view_state,
-                    tooltip={'text': 'Station: {station}' f'\n Pollution: {{{pollutant}}}'},
-                ),
-                on_select='rerun', 
-                selection_mode='multi-object'
-            )
-
-        with cbar_col:
-            @st.cache_data(hash_funcs={
-            type(cmap_lines): lambda x: str(x.__class__.__name__),
-            type(norm_lines): lambda x: str(x.__class__.__name__)})
+            sm = cm.ScalarMappable(cmap=cmap_lines, norm=norm_lines)
+            sm.set_array([])
             
-            def create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant):
-                fig, ax = plt.subplots(figsize=(1.5, 3))
-                ax.set_visible(False)
-                
-                sm = cm.ScalarMappable(cmap=cmap_lines, norm=norm_lines)
-                sm.set_array([])
-                
-                cbar = plt.colorbar(sm, ax=ax, orientation='vertical')
-                cbar.set_label(f'{pollutant.upper()} (μg/m³)', rotation=270, labelpad=20)
-                cbar.set_ticks(bins)
-                cbar.set_ticklabels(bins)
-                cbar.ax.tick_params(colors='white')  
-                cbar.ax.yaxis.label.set_color('white')  
-                cbar.outline.set_edgecolor('white')
-                
-                return fig
-            fig = create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant)
-            st.pyplot(fig, transparent=True)
-            plt.close()
+            cbar = plt.colorbar(sm, ax=ax, orientation='vertical')
+            cbar.set_label(f'{pollutant.upper()} (μg/m³)', rotation=270, labelpad=20)
+            cbar.set_ticks(bins)
+            cbar.set_ticklabels(bins)
+            cbar.ax.tick_params(colors='white')  
+            cbar.ax.yaxis.label.set_color('white')  
+            cbar.outline.set_edgecolor('white')
             
-        event.selection
+            return fig
+        fig = create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant)
+        st.pyplot(fig, transparent=True)
+        plt.close()
+        
+    event.selection
 
     
