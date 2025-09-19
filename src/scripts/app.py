@@ -369,7 +369,7 @@ with st.sidebar:
             st.session_state['precipitation'] = float(form_select_precip)
             st.session_state['rain'] = float(form_select_rain)
             st.session_state['shortwave_radiation'] = float(form_select_shortwave_radiation)
-            st.session_state['form_last_updated'] = time.time()
+            st.session_state['form_last_updated'] = float(time.time())
 
         else:
             st.info("Adjust parameters above and click 'Update' to apply changes")
