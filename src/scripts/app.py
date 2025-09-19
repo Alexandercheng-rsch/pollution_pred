@@ -180,14 +180,6 @@ station_list = ['Belfast Centre', 'Bexley - Belvedere West',
        'Wicken Fen', 'Wigan Centre', 'Wirral Tranmere', 'Yarner Wood',
        'York Bootham']
 
-st.markdown(
-       "<style>" +
-        ".element-container button.step-up { display: none; } " +
-        ".element-container button.step-down  { display: none; } " +
-        ".element-container div[data-baseweb] { border-radius: 4px; } "
-       "</style>"
-       , unsafe_allow_html=True
-)
 # Select the station you want to predict
 with st.sidebar:
     st.session_state.loaded = False 
@@ -254,6 +246,14 @@ with st.sidebar:
         with st.expander('Meteorlogical Data'):
             select_t = st.number_input(f'{pollutant.upper()} Concentration (μg/m³)', float(0), float(300), 
                                        step=0.1, value=float(np.expm1(row[f'{pollutant}'])))
+            st.markdown(
+                "<style>" +
+                    ".element-container button.step-up { display: none; } " +
+                    ".element-container button.step-down  { display: none; } " +
+                    ".element-container div[data-baseweb] { border-radius: 4px; } "
+                "</style>"
+                , unsafe_allow_html=True
+            )
             select_temp = st.slider('Temperature (°C)', -10, 45, value=int(row['temperature_2m']))
             select_sp = st.number_input('Surface Pressure (hPa)', min_value=float(900), max_value=float(1100), 
                                         step=0.01, value=float(row['surface_pressure']))       
