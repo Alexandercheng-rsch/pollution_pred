@@ -31,12 +31,21 @@ remove_step_number_input()
 if 'downloaded' not in st.session_state:
     st.session_state.downloaded = False
 if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
-    url_models = ["https://drive.google.com/file/d/1nCj6zLMocxIT-mGA7gqIB0tqCs_A3DpW", "https://drive.google.com/file/d/1siqY-_o2j9zyVH_ouXZHezsq7Sa1OVaK",
-           "https://drive.google.com/file/d/1qpdnUVErI2qNh0BrvPXsXMuF9FBs8EDH", "https://drive.google.com/file/d/1z2q62ZbcvJZ1UnBctHKMWvmoxjiC0A3k",
-           "https://drive.google.com/file/d/1LcUqJCRge7yxGOD9Q9w-lnqoVa8ilurm", "https://drive.google.com/file/d/1ZXAIUHfCKy37E8fPANovri4yyzRVowN5"]
+    url_models = [
+        "https://drive.google.com/uc?id=1nCj6zLMocxIT-mGA7gqIB0tqCs_A3DpW",
+        "https://drive.google.com/uc?id=1siqY-_o2j9zyVH_ouXZHezsq7Sa1OVaK",
+        "https://drive.google.com/uc?id=1qpdnUVErI2qNh0BrvPXsXMuF9FBs8EDH",
+        "https://drive.google.com/uc?id=1z2q62ZbcvJZ1UnBctHKMWvmoxjiC0A3k",
+        "https://drive.google.com/uc?id=1LcUqJCRge7yxGOD9Q9w-lnqoVa8ilurm",
+        "https://drive.google.com/uc?id=1ZXAIUHfCKy37E8fPANovri4yyzRVowN5"
+    ]
     
-    url_test = ["https://drive.google.com/file/d/1dD5CohGL9jp3y_kCGKwEHkB2pMkXqSqu", "https://drive.google.com/file/d/1TUfv052yVfr3qr34wsETZM8gFGifjl27", 
-                "https://drive.google.com/file/d/1amy0T8czFfJjJBQ6rjzqofjwcZDuWF_0", "https://drive.google.com/file/d/1nc7YtacKPwpUFTX1LzZFUKHqAzcG35Li"]
+    url_test = [
+        "https://drive.google.com/uc?id=1dD5CohGL9jp3y_kCGKwEHkB2pMkXqSqu",
+        "https://drive.google.com/uc?id=1TUfv052yVfr3qr34wsETZM8gFGifjl27",
+        "https://drive.google.com/uc?id=1amy0T8czFfJjJBQ6rjzqofjwcZDuWF_0",
+        "https://drive.google.com/uc?id=1nc7YtacKPwpUFTX1LzZFUKHqAzcG35Li"
+    ]
     output = "./pollution_data/models"  # Current directory
     os.makedirs(output, exist_ok=True)
     progress_bar = st.progress(0, text="Downloading models...")
