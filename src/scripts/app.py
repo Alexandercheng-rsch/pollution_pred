@@ -317,10 +317,11 @@ with st.sidebar:
         time_left = current_time - st.session_state.last_changed
         disable_button = time_left < 5
             
-        if st.button('Predict', disabled=disable_button):
+        clicked = st.button('Predict', disabled=disable_button)
+        if clicked:
             disable_button = True
             st.session_state.last_changed = time.time()
-            
+            st.session_state.last_execution = current_time
             time_since_clicked = current_time - st.session_state.last_execution
             plus_12 = predict_datetime + datetime.timedelta(hours=12)
             if time_since_clicked >= cooldown:
