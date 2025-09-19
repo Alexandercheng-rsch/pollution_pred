@@ -295,57 +295,93 @@ with st.sidebar:
 
         # Meteorological variables
         with st.expander("Meteorological Data"):
-            select_t = st.number_input(
-                f"{pollutant.upper()} Concentration (μg/m³)",
-                min_value=0.0, max_value=300.0,
-                step=0.1,
-                key=f"{pollutant}_concentration"
-            )
-            select_temp = st.slider(
-                "Temperature (°C)", -10, 45,
-                key="temperature"
-            )
-            select_sp = st.number_input(
-                "Surface Pressure (hPa)",
-                min_value=900.0, max_value=1100.0,
-                step=0.01,
-                key="surface_pressure"
-            )
-            select_pressure_msl = st.number_input(
-                "Mean Sea Level pressure (hPa)",
-                min_value=900.0, max_value=1300.0,
-                step=0.01,
-                key="pressure_msl"
-            )
-            select_wind_speed = st.slider(
-                "Wind Speed (m/s)", 0.0, 70.0,
-                step=0.1,
-                key="wind_speed"
-            )
-            select_wind_direction = st.slider(
-                "Wind Direction (°)", 0.0, 360.0,
-                step=1.0,
-                key="wind_direction"
-            )
-            select_rh = st.slider(
-                "Relative Humidity (%)", 0, 100,
-                key="relative_humidity"
-            )
-            select_precip = st.slider(
-                "Precipitation (mm)", 0.0, 50.0,
-                step=0.1,
-                key="precipitation"
-            )
-            select_rain = st.slider(
-                "Rain (mm)", 0.0, 2.0,
-                step=0.01,
-                key="rain"
-            )
-            select_shortwave_radiation = st.slider(
-                "Shortwave Radiation (W/m²)", 0.0, 1200.0,
-                step=1.0,
-                key="shortwave_radiation"
-            )
+            with st.form("meteorological_form", clear_on_submit=False):
+                st.markdown("### Input Parameters")
+                form_select_t  = st.number_input(
+                    f"{pollutant.upper()} Concentration (μg/m³)",
+                    min_value=0.0, max_value=300.0,
+                    step=0.1,
+                    key=f"{pollutant}_concentration"
+                )
+                form_select_temp  = st.slider(
+                    "Temperature (°C)", -10, 45,
+                    key="temperature"
+                )
+                form_select_sp = st.number_input(
+                    "Surface Pressure (hPa)",
+                    min_value=900.0, max_value=1100.0,
+                    step=0.01,
+                    key="surface_pressure"
+                )
+                form_select_pressure_msl = st.number_input(
+                    "Mean Sea Level pressure (hPa)",
+                    min_value=900.0, max_value=1300.0,
+                    step=0.01,
+                    key="pressure_msl"
+                )
+                form_select_wind_speed = st.slider(
+                    "Wind Speed (m/s)", 0.0, 70.0,
+                    step=0.1,
+                    key="wind_speed"
+                )
+                form_select_wind_direction  = st.slider(
+                    "Wind Direction (°)", 0.0, 360.0,
+                    step=1.0,
+                    key="wind_direction"
+                )
+                form_select_rh  = st.slider(
+                    "Relative Humidity (%)", 0, 100,
+                    key="relative_humidity"
+                )
+                form_select_precip = st.slider(
+                    "Precipitation (mm)", 0.0, 50.0,
+                    step=0.1,
+                    key="precipitation"
+                )
+                form_select_rain = st.slider(
+                    "Rain (mm)", 0.0, 2.0,
+                    step=0.01,
+                    key="rain"
+                )
+                form_select_shortwave_radiation = st.slider(
+                    "Shortwave Radiation (W/m²)", 0.0, 1200.0,
+                    step=1.0,
+                    key="shortwave_radiation"
+                )
+        form_submitted = st.form_submit_button(
+            "Update Meteorological Parameters", 
+            type="primary",
+            use_container_width=True
+        )
+        if form_submitted:
+            st.success("Parameters updated successfully!")
+            
+            # Store form values in session state
+            st.session_state.update({
+                f'{pollutant}_concentration': form_select_t,
+                'temperature': form_select_temp,
+                'surface_pressure': form_select_sp,
+                'pressure_msl': form_select_pressure_msl,
+                'wind_speed': form_select_wind_speed,
+                'wind_direction': form_select_wind_direction,
+                'relative_humidity': form_select_rh,
+                'precipitation': form_select_precip,
+                'rain': form_select_rain,
+                'shortwave_radiation': form_select_shortwave_radiation,
+                'form_last_updated': time.time()
+            })
+        else:
+            st.info("Adjust parameters above and click 'Update' to apply changes")
+        select_t = st.session_state.get(f'{pollutant}_concentration', float(np.expm1(row[f'{pollutant}'])))
+        select_temp = st.session_state.get('temperature', int(row["temperature_2m"]))
+        select_sp = st.session_state.get('surface_pressure', float(row["surface_pressure"]))
+        select_pressure_msl = st.session_state.get('pressure_msl', float(row["pressure_msl"]))
+        select_wind_speed = st.session_state.get('wind_speed', float(row["wind_speed_10m"]))
+        select_wind_direction = st.session_state.get('wind_direction', float(row["wind_direction_10m"]))
+        select_rh = st.session_state.get('relative_humidity', int(row["relative_humidity_2m"]))
+        select_precip = st.session_state.get('precipitation', float(row["precipitation"]))
+        select_rain = st.session_state.get('rain', float(row["rain"]))
+        select_shortwave_radiation = st.session_state.get('shortwave_radiation', float(row["shortwave_radiation"]))
 
         selected_station_coords = station_coordinates[station_coordinates['station'] == select_station]
         #Hidden advance menu for lags/rolling features
@@ -755,5 +791,6 @@ with col[1]:
                 plt.close()
                 
             event.selection
-
+        else:
+            st.toast('Map Failed to Load Due to Debounce Limit')
 st.session_state.last_value_changed_time = time.time()
