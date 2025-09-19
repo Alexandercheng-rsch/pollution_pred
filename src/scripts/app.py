@@ -499,7 +499,8 @@ with st.sidebar:
             st.text("In our case the persistence model can be written as:")
             st.latex(r'\hat{y}_{t} = y_{t + 12}')
             st.text('For those who are not too math savvy, it simply means we expect the pollution to be the same 12 hours ahead in time.')
-
+        with st.expander("Why is the app so slow?"):
+            st.text("Due to the limited resources on Streamlit community, I had to make some major UX changes for example adding debugging and including session states to show the graph and plot when the code is executed. In addition, due to the size of each model, it already takes over 600 MB of RAM which is 60(%) of usage already. If a user spammed the predict button or any button, the models will load 'x' amount of times which will cause a memory leakage and in turn crash the app. I, as the the author will have to manually restart the app, as it will not restart itself. As a note, please be nice and try not to spam the app :).")
 # -- Get a DF of the stations for the selected date and hour
 @st.cache_data
 def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
