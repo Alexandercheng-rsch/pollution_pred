@@ -286,7 +286,7 @@ with st.sidebar:
         # Meteorological variables
         with st.expander('Meteorlogical Data'):
             with st.expander("Meteorological Data"):
-                elect_t = st.number_input(
+                select_t = st.number_input(
                     f"{pollutant.upper()} Concentration (μg/m³)",
                     min_value=0.0, max_value=300.0,
                     step=0.1,
