@@ -286,17 +286,15 @@ with st.sidebar:
         # Given information, start predicting 
         current_time = time.time()
         time_left = current_time - st.session_state.last_changed
-        if time_left < 5:
-            disable_button = True
-        else:
-            disable_button = False
+        disable_button = time_left < 5
+            
         if st.button('Predict', disabled=disable_button):
             disable_button = True
+            st.session_state.last_changed = time.time()
+            
+            time_since_clicked = current_time - st.session_state.last_execution
             with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
                 time.sleep(3)
-            current_time = time.time()
-            st.session_state.last_changed = current_time
-            time_since_clicked = current_time - st.session_state.last_execution
             plus_12 = predict_datetime + datetime.timedelta(hours=12)
             if time_since_clicked >= cooldown:
                 if select_pollution == 'PM2.5':
