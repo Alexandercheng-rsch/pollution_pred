@@ -52,6 +52,8 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
         progress_bar.progress(i / len(url_test), text=f"Downloading test ({i}/{len(url_test)})")
         gdown.download(file, output=output, quiet=False)
         os.makedirs(output, exist_ok=True)
+        gdown.download_folder(file, output=output, quiet=False)
+        print("Downloaded:", os.listdir(output))
     st.session_state.downloaded = True
 # -- Cooldown for prediction button
 cooldown = 5
