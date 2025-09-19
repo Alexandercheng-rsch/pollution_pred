@@ -550,8 +550,6 @@ with col[1]:
     station_coordinates_joined['color'] = station_coordinates_joined['color'].apply(lambda x: [int(c * 255) for c in x])
     cmap = ListedColormap(station_coordinates_joined['color'].values)
 
-
-
     icon_data = {
         'url': 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
         'width': 128,
@@ -636,8 +634,10 @@ with col[1]:
         )
 
     with cbar_col:
-
-        @st.cache_data
+        @st.cache_data(hash_funcs={
+        type(cmap_lines): lambda x: str(x.__class__.__name__),
+        type(norm_lines): lambda x: str(x.__class__.__name__)})
+        
         def create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant):
             fig, ax = plt.subplots(figsize=(1.5, 3))
             ax.set_visible(False)
