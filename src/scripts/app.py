@@ -380,7 +380,7 @@ with st.sidebar:
                 st.session_state.model_predicting = False
                 disable_predictbutton = False
             else:
-                disable_predictbutton = True
+                disable_predictbutton = False
                 remaining_time = cooldown - time_since_clicked
                 st.warning(f'Please wait for {remaining_time:.0f} seconds for your next prediction.')
 
