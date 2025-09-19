@@ -20,7 +20,6 @@ import gdown
 import warnings
 import gc
 warnings.filterwarnings("ignore")
-st.set_option('server.showErrorDetails', True)
 
 # --Ensure that the files are downloaded once.
 if 'downloaded' not in st.session_state:
