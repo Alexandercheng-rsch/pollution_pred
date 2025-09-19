@@ -38,6 +38,9 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
     
 # -- Cooldown for prediction button
 cooldown = 5
+
+# -- DEBOUNCE TIME
+DEBOUNCE = 3
 # -- Loading valid dates and test data
 @st.cache_data
 def load_data(path):
@@ -147,6 +150,11 @@ if 'o3_loaded' not in st.session_state:
     
 if 'loaded' not in st.session_state:
     st.session_state.loaded = False
+
+if 'last_value_changed_time' not in st.session_state:
+    st.session_state.last_value_changed_time = 0
+
+    
 X_dfs = {
     'o3': X_o3_test,
     'pm25': X_pm25_test
@@ -287,57 +295,65 @@ with st.sidebar:
 
         # Meteorological variables
         with st.expander("Meteorological Data"):
-            select_t = st.number_input(
-                f"{pollutant.upper()} Concentration (μg/m³)",
-                min_value=0.0, max_value=300.0,
-                step=0.1,
-                key=f"{pollutant}_concentration"
-            )
-            select_temp = st.slider(
-                "Temperature (°C)", -10, 45,
-                key="temperature"
-            )
-            select_sp = st.number_input(
-                "Surface Pressure (hPa)",
-                min_value=900.0, max_value=1100.0,
-                step=0.01,
-                key="surface_pressure"
-            )
-            select_pressure_msl = st.number_input(
-                "Mean Sea Level pressure (hPa)",
-                min_value=900.0, max_value=1300.0,
-                step=0.01,
-                key="pressure_msl"
-            )
-            select_wind_speed = st.slider(
-                "Wind Speed (m/s)", 0.0, 70.0,
-                step=0.1,
-                key="wind_speed"
-            )
-            select_wind_direction = st.slider(
-                "Wind Direction (°)", 0.0, 360.0,
-                step=1.0,
-                key="wind_direction"
-            )
-            select_rh = st.slider(
-                "Relative Humidity (%)", 0, 100,
-                key="relative_humidity"
-            )
-            select_precip = st.slider(
-                "Precipitation (mm)", 0.0, 50.0,
-                step=0.1,
-                key="precipitation"
-            )
-            select_rain = st.slider(
-                "Rain (mm)", 0.0, 2.0,
-                step=0.01,
-                key="rain"
-            )
-            select_shortwave_radiation = st.slider(
-                "Shortwave Radiation (W/m²)", 0.0, 1200.0,
-                step=1.0,
-                key="shortwave_radiation"
-            )
+            current_time_met = time.time()
+            time_last_changed = current_time_met - st.session_state.last_value_changed_time 
+
+            if time_last_changed >= DEBOUNCE:
+                st.session_state.last_value_changed_time = current_time_met
+                select_t = st.number_input(
+                    f"{pollutant.upper()} Concentration (μg/m³)",
+                    min_value=0.0, max_value=300.0,
+                    step=0.1,
+                    key=f"{pollutant}_concentration"
+                )
+                select_temp = st.slider(
+                    "Temperature (°C)", -10, 45,
+                    key="temperature"
+                )
+                select_sp = st.number_input(
+                    "Surface Pressure (hPa)",
+                    min_value=900.0, max_value=1100.0,
+                    step=0.01,
+                    key="surface_pressure"
+                )
+                select_pressure_msl = st.number_input(
+                    "Mean Sea Level pressure (hPa)",
+                    min_value=900.0, max_value=1300.0,
+                    step=0.01,
+                    key="pressure_msl"
+                )
+                select_wind_speed = st.slider(
+                    "Wind Speed (m/s)", 0.0, 70.0,
+                    step=0.1,
+                    key="wind_speed"
+                )
+                select_wind_direction = st.slider(
+                    "Wind Direction (°)", 0.0, 360.0,
+                    step=1.0,
+                    key="wind_direction"
+                )
+                select_rh = st.slider(
+                    "Relative Humidity (%)", 0, 100,
+                    key="relative_humidity"
+                )
+                select_precip = st.slider(
+                    "Precipitation (mm)", 0.0, 50.0,
+                    step=0.1,
+                    key="precipitation"
+                )
+                select_rain = st.slider(
+                    "Rain (mm)", 0.0, 2.0,
+                    step=0.01,
+                    key="rain"
+                )
+                select_shortwave_radiation = st.slider(
+                    "Shortwave Radiation (W/m²)", 0.0, 1200.0,
+                    step=1.0,
+                    key="shortwave_radiation"
+                )
+            else:
+                st.toast(f'Debounce Limit reached, try again in {DEBOUNCE - time_last_changed}')
+                
         selected_station_coords = station_coordinates[station_coordinates['station'] == select_station]
         #Hidden advance menu for lags/rolling features
         
@@ -368,9 +384,9 @@ with st.sidebar:
             current_time = time.time()
             time_since_clicked = current_time - st.session_state.last_execution
             plus_12 = predict_datetime + datetime.timedelta(hours=12)
-            with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
-                time.sleep(3)
             if time_since_clicked >= cooldown:
+                with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
+                    time.sleep(3)
                 st.session_state.loaded = True
                 st.session_state.last_execution = current_time
                 st.success(f'Predicting {select_pollution} for {select_station}')
@@ -500,7 +516,9 @@ with st.sidebar:
             st.latex(r'\hat{y}_{t} = y_{t + 12}')
             st.text('For those who are not too math savvy, it simply means we expect the pollution to be the same 12 hours ahead in time.')
         with st.expander("Why is the app so slow?"):
-            st.text("Due to the limited resources on Streamlit community, I had to make some major UX changes for example adding debugging and including session states to show the graph and plot when the code is executed. In addition, due to the size of each model, it already takes over 600 MB of RAM which is 60(%) of usage already. If a user spammed the predict button or any button, the models will load 'x' amount of times which will cause a memory leakage and in turn crash the app. I, as the the author will have to manually restart the app, as it will not restart itself. As a note, please be nice and try not to spam the app :).")
+            st.text("Due to the limited resources on Streamlit community, I had to make some major UX changes for example adding debouncing and including session states to show the graph and plot when the code is executed. In addition, due to the size of each model, it already takes over 600 MB of RAM which is 60(%) of usage already. If a user spammed the predict button or any button, the models will load 'x' amount of times which will cause a memory leakage and in turn crash the app. I, as the the author will have to manually restart the app, as it will not restart itself. As a note, please be nice and try not to spam the app :).")
+        with st.expander("What models are you using?"):
+            st.text('xg')
 # -- Get a DF of the stations for the selected date and hour
 @st.cache_data
 def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
