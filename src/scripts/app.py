@@ -65,6 +65,14 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
     progress_bar_2.empty()
         
     st.session_state.downloaded = True
+    
+# -- Define encoders
+o3_encoder = None
+pm25_encoder = None
+encode_dict = {
+    'pm25': pm25_encoder,
+    'o3': o3_encoder
+}
 # -- Cooldown for prediction button
 cooldown = 5
 # -- Loading valid dates and test data
@@ -333,28 +341,15 @@ with st.sidebar:
                     pm25_classifier_model = load_model_pm25_classifier()
                     pm25_middle_model = load_model_pm25_middle()
                     pm25_upper_model = load_model_pm25_upper()
+                    pm25_encoder = load_encoder_pm25()
                     pm25_classifier_model.set_params(tree_method='hist', device='cpu')
                     pm25_middle_model.set_params(tree_method='hist', device='cpu')
                     pm25_upper_model.set_params(tree_method='hist', device='cpu')
-                    pm25_encoder = load_encoder_pm25()
-                    st.session_state.pm25_loaded = True
-                    encoder = pm25_encoder
-                    if st.session_state.o3_loaded:
-                        del o3_encoder; gc.collect()
-                        del o3_model; gc.collect()
-                        st.session_state.o3_loaded = False
+                    
                 else:
                     o3_encoder = load_encoder_o3()
                     o3_model = load_model_o3()
                     o3_model.set_params(tree_method='hist', device='cpu')
-                    encoder = o3_encoder
-                    if st.session_state.pm25_loaded:
-                        del pm25_classifier_model; gc.collect()
-                        del pm25_encoder; gc.collect()
-                        del pm25_middle_model; gc.collect()
-                        del pm25_upper_model; gc.collect()
-                        st.session_state.pm25_loaded = False
-                    st.session_state.o3_loaded = True
                 st.session_state.loaded = True
                 st.session_state.last_execution = current_time
                 st.session_state.cooldown = current_time
@@ -400,14 +395,20 @@ with st.sidebar:
                     
                 }
                 input_df.columns = X_dfs[pollutant].columns
-                transformed_input = encoder.transform(input_df)
+                transformed_input = encode_dict[pollutant].transform(input_df)
                 
                 if pollutant == 'o3':
                     prediction = np.expm1(o3_model.predict(transformed_input)[0])
+                    del o3_encoder; gc.collect()
+                    del o3_model; gc.collect()
                 else:
                     threshold = 0.25  
                     predict_prob = pm25_classifier_model.predict_proba(transformed_input)[:, 1]
                     prediction = np.expm1(predict_prob * pm25_upper_model.predict(transformed_input) + (1 - predict_prob) * pm25_middle_model.predict(transformed_input))[0]
+                    del pm25_classifier_model; gc.collect()
+                    del pm25_encoder; gc.collect()
+                    del pm25_middle_model; gc.collect()
+                    del pm25_upper_model; gc.collect()
                 if st.session_state.station_off:
                     st.warning('There is no data available for the selected date and time, a prediction will be made however no data will be shown on the graph.')
                 else:
