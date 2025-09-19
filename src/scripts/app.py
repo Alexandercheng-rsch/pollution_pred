@@ -488,16 +488,24 @@ with st.sidebar:
 # -- Get a DF of the stations for the selected date and hour
 @st.cache_data
 def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
-    get_current_stations = X_dfs[pollutant].xs(predict_datetime.isoformat())[['station', 'wind_direction_10m', f'{pollutant}']]
-    station_coordinates_joined = pd.merge(station_coordinates, get_current_stations, on='station', how='left')
-    station_coordinates_joined[f'{pollutant}'] = np.expm1(station_coordinates_joined[f'{pollutant}'])
-    mask = station_coordinates_joined[f'{pollutant}'].isna()
-    station_coordinates_joined.loc[mask, 'status'] = 'Offline'
-    station_coordinates_joined.loc[~mask, 'status'] = 'Online'
-    station_coordinates_joined[f'{pollutant}'] = station_coordinates_joined[f'{pollutant}'].round(2)
-    return station_coordinates_joined, mask
+    try:
+        get_current_stations = X_dfs[pollutant].xs(predict_datetime.isoformat())[['station', 'wind_direction_10m', f'{pollutant}']]
+        station_coordinates_joined = pd.merge(station_coordinates, get_current_stations, on='station', how='left')
+        station_coordinates_joined[f'{pollutant}'] = np.expm1(station_coordinates_joined[f'{pollutant}'])
+        mask = station_coordinates_joined[f'{pollutant}'].isna()
+        station_coordinates_joined.loc[mask, 'status'] = 'Offline'
+        station_coordinates_joined.loc[~mask, 'status'] = 'Online'
+        station_coordinates_joined[f'{pollutant}'] = station_coordinates_joined[f'{pollutant}'].round(2)
+    except KeyError:
+        st.toast('All stations are offline.')
+        get_current_stations = X_dfs[pollutant].iloc[[0]][['station', 'wind_direction_10m', f'{pollutant}']]
+        station_coordinates_joined = pd.merge(station_coordinates, get_current_stations, on='station', how='left')
+        station_coordinates_joined[f'{pollutant}'] = np.expm1(station_coordinates_joined[f'{pollutant}'])
+        mask = station_coordinates_joined[f'{pollutant}'].isna()
+        station_coordinates_joined['status'] = 'Offline'
+        return station_coordinates_joined, mask
 
-station_coordinates_joined, mask= get_current_station_dt(predict_datetime, pollutant, station_coordinates)
+station_coordinates_joined, mask = get_current_station_dt(predict_datetime, pollutant, station_coordinates)
 # -- Main section of the app
 col= st.columns((2, 4.5, 2), gap='medium')
 
