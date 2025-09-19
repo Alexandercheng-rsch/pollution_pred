@@ -36,7 +36,7 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
     os.makedirs(output, exist_ok=True)
     for i, file in enumerate(url):
         st.progress(i, text='Please wait, currently downloading models and datasets...')
-        gdown.download_folder(str(file), output=output, quiet=False)
+        gdown.download_folder(file, output=output, quiet=False)
         os.makedirs(output, exist_ok=True)
         gdown.download_folder(url, output=output, quiet=False)
     st.session_state.downloaded = True
