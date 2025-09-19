@@ -293,10 +293,10 @@ with st.sidebar:
             st.session_state.last_changed = time.time()
             
             time_since_clicked = current_time - st.session_state.last_execution
-            with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
-                time.sleep(3)
             plus_12 = predict_datetime + datetime.timedelta(hours=12)
             if time_since_clicked >= cooldown:
+                with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
+                    time.sleep(3)
                 if select_pollution == 'PM2.5':
                     pm25_classifier_model = load_model_pm25_classifier()
                     pm25_middle_model = load_model_pm25_middle()
