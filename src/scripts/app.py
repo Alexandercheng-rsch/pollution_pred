@@ -155,6 +155,8 @@ if 'last_value_changed_time' not in st.session_state:
     st.session_state.last_value_changed_time = 0
 current_time = time.time()
 time_diff = current_time - st.session_state.last_value_changed_time
+if 'last_datetime_for_form' not in st.session_state:
+    st.session_state['last_datetime_for_form'] = None
 X_dfs = {
     'o3': X_o3_test,
     'pm25': X_pm25_test
@@ -372,17 +374,19 @@ with st.sidebar:
             })
         else:
             st.info("Adjust parameters above and click 'Update' to apply changes")
-        select_t = st.session_state.get(f'{pollutant}_concentration', float(np.expm1(row[f'{pollutant}'])))
-        select_temp = st.session_state.get('temperature', int(row["temperature_2m"]))
-        select_sp = st.session_state.get('surface_pressure', float(row["surface_pressure"]))
-        select_pressure_msl = st.session_state.get('pressure_msl', float(row["pressure_msl"]))
-        select_wind_speed = st.session_state.get('wind_speed', float(row["wind_speed_10m"]))
-        select_wind_direction = st.session_state.get('wind_direction', float(row["wind_direction_10m"]))
-        select_rh = st.session_state.get('relative_humidity', int(row["relative_humidity_2m"]))
-        select_precip = st.session_state.get('precipitation', float(row["precipitation"]))
-        select_rain = st.session_state.get('rain', float(row["rain"]))
-        select_shortwave_radiation = st.session_state.get('shortwave_radiation', float(row["shortwave_radiation"]))
-
+        current_datetime_str = predict_datetime.isoformat()
+        if st.session_state['last_datetime_for_form'] != current_datetime_str:
+            select_t = st.session_state.get(f'{pollutant}_concentration', float(np.expm1(row[f'{pollutant}'])))
+            select_temp = st.session_state.get('temperature', int(row["temperature_2m"]))
+            select_sp = st.session_state.get('surface_pressure', float(row["surface_pressure"]))
+            select_pressure_msl = st.session_state.get('pressure_msl', float(row["pressure_msl"]))
+            select_wind_speed = st.session_state.get('wind_speed', float(row["wind_speed_10m"]))
+            select_wind_direction = st.session_state.get('wind_direction', float(row["wind_direction_10m"]))
+            select_rh = st.session_state.get('relative_humidity', int(row["relative_humidity_2m"]))
+            select_precip = st.session_state.get('precipitation', float(row["precipitation"]))
+            select_rain = st.session_state.get('rain', float(row["rain"]))
+            select_shortwave_radiation = st.session_state.get('shortwave_radiation', float(row["shortwave_radiation"]))
+            st.session_state['last_datetime_for_form'] = current_datetime_str
         selected_station_coords = station_coordinates[station_coordinates['station'] == select_station]
         #Hidden advance menu for lags/rolling features
         
