@@ -6,4 +6,4 @@ altair
 pydeck
 gdown
 xgboost
-sklearn 
+scikit-learn
