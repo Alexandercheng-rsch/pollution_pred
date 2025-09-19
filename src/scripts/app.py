@@ -286,59 +286,58 @@ with st.sidebar:
             st.session_state["shortwave_radiation"] = float(row["shortwave_radiation"])
 
         # Meteorological variables
-        with st.expander('Meteorlogical Data'):
-            with st.expander("Meteorological Data"):
-                select_t = st.number_input(
-                    f"{pollutant.upper()} Concentration (μg/m³)",
-                    min_value=0.0, max_value=300.0,
-                    step=0.1,
-                    key=f"{pollutant}_concentration"
-                )
-                select_temp = st.slider(
-                    "Temperature (°C)", -10, 45,
-                    key="temperature"
-                )
-                select_sp = st.number_input(
-                    "Surface Pressure (hPa)",
-                    min_value=900.0, max_value=1100.0,
-                    step=0.01,
-                    key="surface_pressure"
-                )
-                select_pressure_msl = st.number_input(
-                    "Mean Sea Level pressure (hPa)",
-                    min_value=900.0, max_value=1300.0,
-                    step=0.01,
-                    key="pressure_msl"
-                )
-                select_wind_speed = st.slider(
-                    "Wind Speed (m/s)", 0.0, 70.0,
-                    step=0.1,
-                    key="wind_speed"
-                )
-                select_wind_direction = st.slider(
-                    "Wind Direction (°)", 0.0, 360.0,
-                    step=1.0,
-                    key="wind_direction"
-                )
-                select_rh = st.slider(
-                    "Relative Humidity (%)", 0, 100,
-                    key="relative_humidity"
-                )
-                select_precip = st.slider(
-                    "Precipitation (mm)", 0.0, 50.0,
-                    step=0.1,
-                    key="precipitation"
-                )
-                select_rain = st.slider(
-                    "Rain (mm)", 0.0, 2.0,
-                    step=0.01,
-                    key="rain"
-                )
-                select_shortwave_radiation = st.slider(
-                    "Shortwave Radiation (W/m²)", 0.0, 1200.0,
-                    step=1.0,
-                    key="shortwave_radiation"
-                )
+        with st.expander("Meteorological Data"):
+            select_t = st.number_input(
+                f"{pollutant.upper()} Concentration (μg/m³)",
+                min_value=0.0, max_value=300.0,
+                step=0.1,
+                key=f"{pollutant}_concentration"
+            )
+            select_temp = st.slider(
+                "Temperature (°C)", -10, 45,
+                key="temperature"
+            )
+            select_sp = st.number_input(
+                "Surface Pressure (hPa)",
+                min_value=900.0, max_value=1100.0,
+                step=0.01,
+                key="surface_pressure"
+            )
+            select_pressure_msl = st.number_input(
+                "Mean Sea Level pressure (hPa)",
+                min_value=900.0, max_value=1300.0,
+                step=0.01,
+                key="pressure_msl"
+            )
+            select_wind_speed = st.slider(
+                "Wind Speed (m/s)", 0.0, 70.0,
+                step=0.1,
+                key="wind_speed"
+            )
+            select_wind_direction = st.slider(
+                "Wind Direction (°)", 0.0, 360.0,
+                step=1.0,
+                key="wind_direction"
+            )
+            select_rh = st.slider(
+                "Relative Humidity (%)", 0, 100,
+                key="relative_humidity"
+            )
+            select_precip = st.slider(
+                "Precipitation (mm)", 0.0, 50.0,
+                step=0.1,
+                key="precipitation"
+            )
+            select_rain = st.slider(
+                "Rain (mm)", 0.0, 2.0,
+                step=0.01,
+                key="rain"
+            )
+            select_shortwave_radiation = st.slider(
+                "Shortwave Radiation (W/m²)", 0.0, 1200.0,
+                step=1.0,
+                key="shortwave_radiation"
+            )
         selected_station_coords = station_coordinates[station_coordinates['station'] == select_station]
         #Hidden advance menu for lags/rolling features
         
