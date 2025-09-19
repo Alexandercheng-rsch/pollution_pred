@@ -31,15 +31,14 @@ remove_step_number_input()
 if 'downloaded' not in st.session_state:
     st.session_state.downloaded = False
 if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
-    url = "https://drive.google.com/drive/folders/1O9ct9Upf5fLT3sztkAGTzMZJbyWsyy4s"
+    url = ["https://drive.google.com/drive/folders/1WKkq6uSr0_7cf3ckmv4UHeQtVHUjwhlI, https://drive.google.com/drive/folders/1wKzWDdU9jhjgKhkZ-kltl1_PXVZBPhJx"]
     output = "./pollution_data"  # Current directory
     os.makedirs(output, exist_ok=True)
-
-    gdown.download_folder(url, output=output, quiet=False)
-
-    os.makedirs(output, exist_ok=True)
-
-    gdown.download_folder(url, output=output, quiet=False)
+    for i, file in enumerate(url):
+        st.progress(i, text='Please wait, currently downloading models and datasets...')
+        gdown.download_folder(file, output=output, quiet=False)
+        os.makedirs(output, exist_ok=True)
+        gdown.download_folder(url, output=output, quiet=False)
     st.session_state.downloaded = True
     
 # -- Cooldown for prediction button
