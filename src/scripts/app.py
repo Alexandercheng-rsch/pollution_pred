@@ -179,7 +179,6 @@ station_list = ['Belfast Centre', 'Bexley - Belvedere West',
 
 # Select the station you want to predict
 with st.sidebar:
-    st.session_state.loaded = False 
     st.title('Select Content')
     tab1, tab2 = st.tabs(['Forecaster', 'Terminology and Q&A'])
 
@@ -364,13 +363,11 @@ with st.sidebar:
 
         # Given information, start predicting 
         if st.button('Predict'):
-
-            
-            with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
-                time.sleep(3)
             current_time = time.time()
             time_since_clicked = current_time - st.session_state.last_execution
             plus_12 = predict_datetime + datetime.timedelta(hours=12)
+            with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
+                time.sleep(3)
             if time_since_clicked >= cooldown:
                 st.session_state.loaded = True
                 st.session_state.last_execution = current_time
@@ -435,7 +432,7 @@ with st.sidebar:
             else:
                 remaining_time = cooldown - time_since_clicked
                 st.warning(f'Please wait for {remaining_time:.0f} seconds for your next prediction.')
-
+                st.session_state.loaded = False
     with tab2:
         with st.expander('Metorlogy Terminology'):
             st.markdown(" - Wind Speed: Wind speed at 10m above ground")
@@ -614,135 +611,135 @@ with col[1]:
         st.altair_chart(chart)
 
     # -- End of session state loaded
-    layers = []
-    show_pins, show_wind_dir, show_pollution = st.columns([1, 1, 1])
-    with show_pins:
-        show_pins_checked = st.checkbox('Show Stations', value=True)
-    with show_wind_dir:
-        show_wind_dir_checked = st.checkbox('Show Wind Direction', value=True)
-    with show_pollution:
-        show_pollution_checked = st.checkbox('Show Pollution', value=True)
+        layers = []
+        show_pins, show_wind_dir, show_pollution = st.columns([1, 1, 1])
+        with show_pins:
+            show_pins_checked = st.checkbox('Show Stations', value=True)
+        with show_wind_dir:
+            show_wind_dir_checked = st.checkbox('Show Wind Direction', value=True)
+        with show_pollution:
+            show_pollution_checked = st.checkbox('Show Pollution', value=True)
 
 
 
 
-    cmap_lines, norm_lines = cmap_continuous(cmap_list_lines)
-    colors = [rgb2hex(cmap_lines(norm_lines(v))) for v in station_coordinates_joined[f'{pollutant}'].values]
-    station_coordinates_joined['color'] = [
-        list(mcolors.to_rgba(c, alpha=0.8))[:3] + [200]  # [R,G,B,Alpha]
-        for c in colors
-    ]
-    station_coordinates_joined['color'] = station_coordinates_joined['color'].apply(lambda x: [int(c * 255) for c in x])
-    cmap = ListedColormap(station_coordinates_joined['color'].values)
+        cmap_lines, norm_lines = cmap_continuous(cmap_list_lines)
+        colors = [rgb2hex(cmap_lines(norm_lines(v))) for v in station_coordinates_joined[f'{pollutant}'].values]
+        station_coordinates_joined['color'] = [
+            list(mcolors.to_rgba(c, alpha=0.8))[:3] + [200]  # [R,G,B,Alpha]
+            for c in colors
+        ]
+        station_coordinates_joined['color'] = station_coordinates_joined['color'].apply(lambda x: [int(c * 255) for c in x])
+        cmap = ListedColormap(station_coordinates_joined['color'].values)
 
-    icon_data = {
-        'url': 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
-        'width': 128,
-        'height': 128,
-        'anchorY': 128,
-    }
+        icon_data = {
+            'url': 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi2.png',
+            'width': 128,
+            'height': 128,
+            'anchorY': 128,
+        }
 
-    arrow_icon = {
-        'url': green_arrow,
-        'width': 128,
-        'height': 128,
-        'anchorY': 64,
-        'anchorX': 64 
-    }
+        arrow_icon = {
+            'url': green_arrow,
+            'width': 128,
+            'height': 128,
+            'anchorY': 64,
+            'anchorX': 64 
+        }
 
-    station_coordinates_joined['icon_pin'] = [icon_data for _ in range(len(station_coordinates_joined))]
-    station_coordinates_joined['latitude_scale'] = station_coordinates_joined['latitude'] - 0.0006
+        station_coordinates_joined['icon_pin'] = [icon_data for _ in range(len(station_coordinates_joined))]
+        station_coordinates_joined['latitude_scale'] = station_coordinates_joined['latitude'] - 0.0006
 
-    view_state = pdk.ViewState(
-        latitude=float(selected_station_coords['latitude']), longitude=float(selected_station_coords['longitude']), controller=True, zoom=14, pitch=0,
+        view_state = pdk.ViewState(
+            latitude=float(selected_station_coords['latitude']), longitude=float(selected_station_coords['longitude']), controller=True, zoom=14, pitch=0,
 
-    )
-
-    station_coordinates_joined['icon_arrow'] = [arrow_icon for _ in range(len(station_coordinates_joined))]
-    if show_pollution_checked:
-        pollution_layer = pdk.Layer(
-            'ScatterplotLayer',
-            station_coordinates_joined.dropna(subset=[f'{pollutant}']),
-            get_position=['longitude', 'latitude'],
-            get_radius=f'{pollutant}',
-            radius_scale=50,  # Adjust to make circles appropriate size
-            radius_min_pixels=20,  # Minimum circle size
-            radius_max_pixels=100,  # Maximum circle size
-            get_fill_color='color',
-            pickable=True,
-            stroked=True,
-            get_line_color=[255, 255, 255],
-            line_width_min_pixels=1,
-            opacity=0.4
-        )
-        layers.append(pollution_layer)
-        
-    if show_wind_dir_checked:
-        wind_layer = pdk.Layer(
-            'IconLayer',
-            data=station_coordinates_joined[station_coordinates_joined['wind_direction_10m'].notna()],
-            get_icon='icon_arrow',
-            get_size=20,
-            get_position=['longitude', 'latitude_scale'],
-            get_angle='wind_direction_10m',
-            opacity=1
-        )
-        layers.append(wind_layer)
-    if show_pins_checked:
-        point_layer = pdk.Layer(
-            'IconLayer',
-            data=station_coordinates_joined,
-            get_icon='icon_pin',
-            get_size=40,
-            get_position=['longitude', 'latitude'],
-            pickable=True,
-            # auto_highlight=True,
-            # get_radius=200,
-            
-        )
-        layers.append(point_layer)
-
-
-
-
-    map_col, cbar_col = st.columns([4, 1]) 
-
-    with map_col:
-        event = st.pydeck_chart(
-            pdk.Deck(
-                layers,
-                initial_view_state=view_state,
-                tooltip={'text': 'Station: {station}' f'\n Pollution: {{{pollutant}}}'},
-            ),
-            on_select='rerun', 
-            selection_mode='multi-object'
         )
 
-    with cbar_col:
-        @st.cache_data(hash_funcs={
-        type(cmap_lines): lambda x: str(x.__class__.__name__),
-        type(norm_lines): lambda x: str(x.__class__.__name__)})
-        
-        def create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant):
-            fig, ax = plt.subplots(figsize=(1.5, 3))
-            ax.set_visible(False)
+        station_coordinates_joined['icon_arrow'] = [arrow_icon for _ in range(len(station_coordinates_joined))]
+        if show_pollution_checked:
+            pollution_layer = pdk.Layer(
+                'ScatterplotLayer',
+                station_coordinates_joined.dropna(subset=[f'{pollutant}']),
+                get_position=['longitude', 'latitude'],
+                get_radius=f'{pollutant}',
+                radius_scale=50,  # Adjust to make circles appropriate size
+                radius_min_pixels=20,  # Minimum circle size
+                radius_max_pixels=100,  # Maximum circle size
+                get_fill_color='color',
+                pickable=True,
+                stroked=True,
+                get_line_color=[255, 255, 255],
+                line_width_min_pixels=1,
+                opacity=0.4
+            )
+            layers.append(pollution_layer)
             
-            sm = cm.ScalarMappable(cmap=cmap_lines, norm=norm_lines)
-            sm.set_array([])
+        if show_wind_dir_checked:
+            wind_layer = pdk.Layer(
+                'IconLayer',
+                data=station_coordinates_joined[station_coordinates_joined['wind_direction_10m'].notna()],
+                get_icon='icon_arrow',
+                get_size=20,
+                get_position=['longitude', 'latitude_scale'],
+                get_angle='wind_direction_10m',
+                opacity=1
+            )
+            layers.append(wind_layer)
+        if show_pins_checked:
+            point_layer = pdk.Layer(
+                'IconLayer',
+                data=station_coordinates_joined,
+                get_icon='icon_pin',
+                get_size=40,
+                get_position=['longitude', 'latitude'],
+                pickable=True,
+                # auto_highlight=True,
+                # get_radius=200,
+                
+            )
+            layers.append(point_layer)
+
+
+
+
+        map_col, cbar_col = st.columns([4, 1]) 
+
+        with map_col:
+            event = st.pydeck_chart(
+                pdk.Deck(
+                    layers,
+                    initial_view_state=view_state,
+                    tooltip={'text': 'Station: {station}' f'\n Pollution: {{{pollutant}}}'},
+                ),
+                on_select='rerun', 
+                selection_mode='multi-object'
+            )
+
+        with cbar_col:
+            @st.cache_data(hash_funcs={
+            type(cmap_lines): lambda x: str(x.__class__.__name__),
+            type(norm_lines): lambda x: str(x.__class__.__name__)})
             
-            cbar = plt.colorbar(sm, ax=ax, orientation='vertical')
-            cbar.set_label(f'{pollutant.upper()} (μg/m³)', rotation=270, labelpad=20)
-            cbar.set_ticks(bins)
-            cbar.set_ticklabels(bins)
-            cbar.ax.tick_params(colors='white')  
-            cbar.ax.yaxis.label.set_color('white')  
-            cbar.outline.set_edgecolor('white')
+            def create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant):
+                fig, ax = plt.subplots(figsize=(1.5, 3))
+                ax.set_visible(False)
+                
+                sm = cm.ScalarMappable(cmap=cmap_lines, norm=norm_lines)
+                sm.set_array([])
+                
+                cbar = plt.colorbar(sm, ax=ax, orientation='vertical')
+                cbar.set_label(f'{pollutant.upper()} (μg/m³)', rotation=270, labelpad=20)
+                cbar.set_ticks(bins)
+                cbar.set_ticklabels(bins)
+                cbar.ax.tick_params(colors='white')  
+                cbar.ax.yaxis.label.set_color('white')  
+                cbar.outline.set_edgecolor('white')
+                
+                return fig
+            fig = create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant)
+            st.pyplot(fig, transparent=True)
+            plt.close()
             
-            return fig
-        fig = create_colorbar_figure(cmap_lines, norm_lines, bins, pollutant)
-        st.pyplot(fig, transparent=True)
-        plt.close()
-        
-    event.selection
+        event.selection
 
     
