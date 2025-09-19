@@ -23,7 +23,7 @@ warnings.filterwarnings("ignore")
 def remove_step_number_input():
     st.markdown("""
                 <style>
-                    .st-emotion-cache-1k5fi8b eaba2yi1 {display: none;}
+                    st-emotion-cache-1k5fi8b eaba2yi1 {display: none;}
                 </style>""",
                 unsafe_allow_html=True)
 remove_step_number_input()
