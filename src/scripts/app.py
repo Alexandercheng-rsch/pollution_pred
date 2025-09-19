@@ -21,21 +21,21 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+# --Ensure that the files are downloaded once.
+if 'downloaded' not in st.session_state:
+    st.session_state.downloaded = False
+if not st.session_state.downloaded:
+    url = "https://drive.google.com/drive/folders/1O9ct9Upf5fLT3sztkAGTzMZJbyWsyy4s"
+    output = "./pollution_data"  # Current directory
+    os.makedirs(output, exist_ok=True)
 
-url = "https://drive.google.com/drive/folders/1O9ct9Upf5fLT3sztkAGTzMZJbyWsyy4s"
-output = "./pollution_data"  # Current directory
+    gdown.download_folder(url, output=output, quiet=False)
 
-# Create directory
-os.makedirs(output, exist_ok=True)
+    os.makedirs(output, exist_ok=True)
 
-# Download folder
-gdown.download_folder(url, output=output, quiet=False)
-
-# Make sure the folder exists
-os.makedirs(output, exist_ok=True)
-
-gdown.download_folder(url, output=output, quiet=False)
-
+    gdown.download_folder(url, output=output, quiet=False)
+    st.session_state.downloaded = True
+    
 # -- Cooldown for prediction button
 cooldown = 5
 # -- Loading valid dates and test data
