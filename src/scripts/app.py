@@ -359,19 +359,18 @@ with st.sidebar:
             st.success("Parameters updated successfully!")
             
             # Store form values in session state
-            st.session_state.update({
-                f'{pollutant}_concentration': form_select_t,
-                'temperature': form_select_temp,
-                'surface_pressure': form_select_sp,
-                'pressure_msl': form_select_pressure_msl,
-                'wind_speed': form_select_wind_speed,
-                'wind_direction': form_select_wind_direction,
-                'relative_humidity': form_select_rh,
-                'precipitation': form_select_precip,
-                'rain': form_select_rain,
-                'shortwave_radiation': form_select_shortwave_radiation,
-                'form_last_updated': time.time()
-            })
+            st.session_state[f'{pollutant}_concentration'] = float(form_select_t)
+            st.session_state['temperature'] = int(form_select_temp)
+            st.session_state['surface_pressure'] = float(form_select_sp)
+            st.session_state['pressure_msl'] = float(form_select_pressure_msl)
+            st.session_state['wind_speed'] = float(form_select_wind_speed)
+            st.session_state['wind_direction'] = float(form_select_wind_direction)
+            st.session_state['relative_humidity'] = int(form_select_rh)
+            st.session_state['precipitation'] = float(form_select_precip)
+            st.session_state['rain'] = float(form_select_rain)
+            st.session_state['shortwave_radiation'] = float(form_select_shortwave_radiation)
+            st.session_state['form_last_updated'] = time.time()
+
         else:
             st.info("Adjust parameters above and click 'Update' to apply changes")
         current_datetime_str = predict_datetime.isoformat()
