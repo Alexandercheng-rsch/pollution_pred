@@ -503,7 +503,7 @@ def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
         station_coordinates_joined[f'{pollutant}'] = np.expm1(station_coordinates_joined[f'{pollutant}'])
         mask = station_coordinates_joined[f'{pollutant}'].isna()
         station_coordinates_joined['status'] = 'Offline'
-        return station_coordinates_joined, mask
+    return station_coordinates_joined, mask
 
 station_coordinates_joined, mask = get_current_station_dt(predict_datetime, pollutant, station_coordinates)
 # -- Main section of the app
