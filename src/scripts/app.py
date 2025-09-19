@@ -148,6 +148,7 @@ X_dfs = {
     'o3': X_o3_test,
     'pm25': X_pm25_test
 }
+
 # -- Main 
 st.title('Air Quality Forecaster 📈')
 st.subheader('12-Hour Ahead PM2.5 & O3 Prediction')
@@ -260,23 +261,82 @@ with st.sidebar:
         else:
             st.session_state.station_off = False
             row = station_df.loc[predict_datetime.isoformat()]
-            
+
+        if f"{pollutant}_concentration" not in st.session_state:
+            st.session_state[f"{pollutant}_concentration"] = float(np.expm1(row[f'{pollutant}']))
+        if "temperature" not in st.session_state:
+            st.session_state["temperature"] = int(row["temperature_2m"])
+        if "surface_pressure" not in st.session_state:
+            st.session_state["surface_pressure"] = float(row["surface_pressure"])
+        if "pressure_msl" not in st.session_state:
+            st.session_state["pressure_msl"] = float(row["pressure_msl"])
+        if "wind_speed" not in st.session_state:
+            st.session_state["wind_speed"] = float(row["wind_speed_10m"])
+        if "wind_direction" not in st.session_state:
+            st.session_state["wind_direction"] = float(row["wind_direction_10m"])
+        if "relative_humidity" not in st.session_state:
+            st.session_state["relative_humidity"] = int(row["relative_humidity_2m"])
+        if "precipitation" not in st.session_state:
+            st.session_state["precipitation"] = float(row["precipitation"])
+        if "rain" not in st.session_state:
+            st.session_state["rain"] = float(row["rain"])
+        if "shortwave_radiation" not in st.session_state:
+            st.session_state["shortwave_radiation"] = float(row["shortwave_radiation"])
+
         # Meteorological variables
         with st.expander('Meteorlogical Data'):
-            select_t = st.number_input(f'{pollutant.upper()} Concentration (μg/m³)', float(0), float(300), 
-                                       step=0.1, value=float(np.expm1(row[f'{pollutant}'])))
-            select_temp = st.slider('Temperature (°C)', -10, 45, value=int(row['temperature_2m']))
-            select_sp = st.number_input('Surface Pressure (hPa)', min_value=float(900), max_value=float(1100), 
-                                        step=0.01, value=float(row['surface_pressure']))        
-            select_pressure_msl = st.number_input('Mean Sea Level pressure (hPa)', min_value=float(900), max_value=float(1300), 
-                                                  step=0.01, value=float(row['pressure_msl']))
-            select_wind_speed = st.slider('Wind Speed (m/s)', float(0), float(70), step=0.01, value=float(row['wind_speed_10m']))
-            select_wind_direction = st.slider('Wind Direction (°)', float(0), float(360), step=0.01, value=float(row['wind_direction_10m']))
-            select_rh = st.slider('Relative Humidity (%)', 0, 100, value=int(row['relative_humidity_2m']))
-            select_precip = st.slider('Precipitation (mm)', 0.0, 50.0, value=row['precipitation'])
-            select_rain = st.slider('Rain mm (inch)', float(0), float(2), step=0.01, value=float(row['rain']))
-            select_shortwave_radiation = st.slider('Shortwave Radiation (W/m²)', float(0), float(1200), step=0.01, 
-                                                   value=float(row['shortwave_radiation']))
+            with st.expander("Meteorological Data"):
+                elect_t = st.number_input(
+                    f"{pollutant.upper()} Concentration (μg/m³)",
+                    min_value=0.0, max_value=300.0,
+                    step=0.1,
+                    key=f"{pollutant}_concentration"
+                )
+                select_temp = st.slider(
+                    "Temperature (°C)", -10, 45,
+                    key="temperature"
+                )
+                select_sp = st.number_input(
+                    "Surface Pressure (hPa)",
+                    min_value=900.0, max_value=1100.0,
+                    step=0.01,
+                    key="surface_pressure"
+                )
+                select_pressure_msl = st.number_input(
+                    "Mean Sea Level pressure (hPa)",
+                    min_value=900.0, max_value=1300.0,
+                    step=0.01,
+                    key="pressure_msl"
+                )
+                select_wind_speed = st.slider(
+                    "Wind Speed (m/s)", 0.0, 70.0,
+                    step=0.1,
+                    key="wind_speed"
+                )
+                select_wind_direction = st.slider(
+                    "Wind Direction (°)", 0.0, 360.0,
+                    step=1.0,
+                    key="wind_direction"
+                )
+                select_rh = st.slider(
+                    "Relative Humidity (%)", 0, 100,
+                    key="relative_humidity"
+                )
+                select_precip = st.slider(
+                    "Precipitation (mm)", 0.0, 50.0,
+                    step=0.1,
+                    key="precipitation"
+                )
+                select_rain = st.slider(
+                    "Rain (mm)", 0.0, 2.0,
+                    step=0.01,
+                    key="rain"
+                )
+                select_shortwave_radiation = st.slider(
+                    "Shortwave Radiation (W/m²)", 0.0, 1200.0,
+                    step=1.0,
+                    key="shortwave_radiation"
+                )
         selected_station_coords = station_coordinates[station_coordinates['station'] == select_station]
         #Hidden advance menu for lags/rolling features
         
