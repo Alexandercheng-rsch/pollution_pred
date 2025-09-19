@@ -53,7 +53,7 @@ def load_icon(path):
 
 green_arrow = load_icon('src/icon/arrow.png')
 # -- Set page config
-apptitle = 'GW Quickview'
+apptitle = 'Air Quality Forecaster'
 
 # -- Load XG Models
 # -- o3 Model
