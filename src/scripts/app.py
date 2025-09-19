@@ -31,7 +31,7 @@ remove_step_number_input()
 if 'downloaded' not in st.session_state:
     st.session_state.downloaded = False
 if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
-    url = ["https://drive.google.com/drive/folders/1WKkq6uSr0_7cf3ckmv4UHeQtVHUjwhlI, https://drive.google.com/drive/folders/1wKzWDdU9jhjgKhkZ-kltl1_PXVZBPhJx"]
+    url = ["https://drive.google.com/drive/folders/1WKkq6uSr0_7cf3ckmv4UHeQtVHUjwhlI", "https://drive.google.com/drive/folders/1wKzWDdU9jhjgKhkZ-kltl1_PXVZBPhJx"]
     output = "./pollution_data"  # Current directory
     os.makedirs(output, exist_ok=True)
     for i, file in enumerate(url):
