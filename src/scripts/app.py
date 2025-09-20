@@ -15,12 +15,12 @@ import pandas as pd
 from matplotlib.colors import rgb2hex
 from functions import cmap_continuous, status_color, remove_step_number_input
 from prediction import make_prediction
+from download import download_models_and_data
 import matplotlib.cm as cm
 import base64
 import matplotlib.colors as mcolors
 from matplotlib.colors import ListedColormap
 import os
-import gdown
 import warnings
 import gc
 warnings.filterwarnings("ignore")
@@ -66,52 +66,14 @@ O3_THRESHOLDS = [0, 33, 66, 100, 120, 180, 240]
 # --Ensure that the files are downloaded once.
 if 'downloaded' not in st.session_state:
     st.session_state.downloaded = False
-if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
-    model_files = {
-        "1nCj6zLMocxIT-mGA7gqIB0tqCs_A3DpW": "binary_classifier.model",
-        "1siqY-_o2j9zyVH_ouXZHezsq7Sa1OVaK": "encoder_o3.model",
-        "1qpdnUVErI2qNh0BrvPXsXMuF9FBs8EDH": "encoder_pm25.model",
-        "1z2q62ZbcvJZ1UnBctHKMWvmoxjiC0A3k": "xg_90.model",
-        "1LcUqJCRge7yxGOD9Q9w-lnqoVa8ilurm": "xg_mid.model",
-        "1ZXAIUHfCKy37E8fPANovri4yyzRVowN5": "xg_reg_o3.model"
-    }
-    progress_bar_1 = st.progress(0, text="Downloading models...")
-    progress_bar_2 = st.progress(0, text="Downloading test files...")
-    output_test = "./pollution_data/models"
-    os.makedirs(output_test, exist_ok=True)
-    for i, (file_id, filename) in enumerate(model_files.items()):
-        url = f"https://drive.google.com/uc?id={file_id}"
-        gdown.download(url, output=os.path.join(output_test, filename), quiet=False)
-        progress_bar_1.progress((i+1)/len(model_files), text=f"Downloading test files ({i+1}/{len(model_files)})")
         
-    test_files = {
-        "1dD5CohGL9jp3y_kCGKwEHkB2pMkXqSqu": "X_o3_test.p",
-        "1amy0T8czFfJjJBQ6rjzqofjwcZDuWF_0": "y_o3_test.p",
-        "1TUfv052yVfr3qr34wsETZM8gFGifjl27": "X_pm25_test.p",
-        "1nc7YtacKPwpUFTX1LzZFUKHqAzcG35Li": "y_pm25_test.p",
-    }
-
-    output_test = "./pollution_data/test"
-    os.makedirs(output_test, exist_ok=True)
-    for i, (file_id, filename) in enumerate(test_files.items()):
-        url = f"https://drive.google.com/uc?id={file_id}"
-        gdown.download(url, output=os.path.join(output_test, filename), quiet=False)
-        progress_bar_2.progress((i+1)/len(test_files), text=f"Downloading test files ({i+1}/{len(test_files)})")
-    progress_bar_1.empty()
-    progress_bar_2.empty()
-        
+if not st.session_state.downloaded:
+    download_models_and_data()
     st.session_state.downloaded = True
 
 # ============================================================================
 # DATA LOADING FUNCTIONS
 # ============================================================================
-# -- Define encoders
-o3_encoder = None
-pm25_encoder = None
-encode_dict = {
-    'pm25': pm25_encoder,
-    'o3': o3_encoder
-}
 # -- Loading valid dates and test data
 @st.cache_data
 def load_data(path):
@@ -307,15 +269,7 @@ with st.sidebar:
             if time_since_clicked >= COOLDOWN_SECONDS:
                 with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
                     time.sleep(PREDICTION_DELAY)
-                    
-                st.session_state.loaded = True
-                st.session_state.last_execution = current_time
-                st.session_state.cooldown = current_time
-                st.success(f'Predicting {select_pollution} for {select_station}')
-                st.write(f'Date/Time: {selected_date_predict} {select_time_predict}')
-                st.write(f'Temperature: {select_temp}°C')
-                st.write(f'Wind Speed: {select_wind_speed} m/s')
-                input_dict = {
+                input_dict = { # probably should have used a st.form instead
                     'select_station': select_station,
                     'current_concentration': np.log1p(current_concentration),
                     'select_wind_speed': select_wind_speed,
@@ -337,7 +291,16 @@ with st.sidebar:
                     'cos_wind_dir': np.cos(select_wind_direction),
                     'is_weekend': selected_date_predict.weekday() >= 5
                 }
-                prediction = make_prediction(select_pollution, values, input_dict, lags, X_dfs)
+                
+                st.session_state.loaded = True
+                st.session_state.last_execution = current_time
+                st.session_state.cooldown = current_time
+                st.success(f'Predicting {select_pollution} for {select_station}')
+                st.write(f'Date/Time: {selected_date_predict} {select_time_predict}')
+                st.write(f'Temperature: {select_temp}°C')
+                st.write(f'Wind Speed: {select_wind_speed} m/s')
+                prediction = make_prediction(pollutant, values, input_dict, lags, X_dfs)
+                
                 if st.session_state.station_off:
                     st.warning('There is no data available for the selected date and time, a prediction will be made however no data will be shown on the graph.')
                 else:
@@ -442,6 +405,7 @@ def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
     return station_coordinates_joined, mask, offline
 
 station_coordinates_joined, mask, offline = get_current_station_dt(predict_datetime, pollutant, station_coordinates)
+
 if offline:
     st.toast('All stations are offline, exceptions triggered.')
 
