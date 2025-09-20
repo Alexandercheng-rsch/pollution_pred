@@ -1,5 +1,5 @@
 from matplotlib.colors import LinearSegmentedColormap, Normalize
-
+import streamlit as st
 
 color_legends = None
 mapbox_token = ""
@@ -36,3 +36,10 @@ def add_color_legend(
 def status_color(val):
     color = "green" if val.lower() == "online" else "red"
     return f"color: {color}; font-weight: bold;"
+
+def remove_step_number_input():
+    st.markdown("""
+                <style>
+                    .eaba2yi2 {display: none;}
+                </style>""",
+                unsafe_allow_html=True)
