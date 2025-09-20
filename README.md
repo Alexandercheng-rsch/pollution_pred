@@ -52,7 +52,7 @@ air-quality-pipeline/
 │   └── icon/                      # Icons and static assets
 ├── requirements.txt
 └── .gitignore
-``
+```
 ## 📂 Streamlit App
 
 ## Demo
