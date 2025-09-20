@@ -54,7 +54,8 @@ air-quality-pipeline/
 └── .gitignore
 ```
 ## Live App
-(pollution-prediction.streamlit.app)
+Check out my Streamlit app [here](https://pollution-prediction.streamlit.app/).
+
 ## Demo
 Click the thumbnail below to watch a demo of the Streamlit app in action:
 [![Watch the video](https://img.youtube.com/vi/a4UmjSwL_ds/0.jpg)](https://youtu.be/a4UmjSwL_ds)
