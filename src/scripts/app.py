@@ -197,9 +197,10 @@ with st.sidebar:
         select_time_predict = st.time_input('Select a time:', step=3600, key='predict_time', value=datetime.time(hour=1))
         
         
-        selected_date_predict = st.date_input('Select a date:', min_value=min(valid_dates_o3), max_value=max(valid_dates_o3))
+        selected_date_predict = st.date_input('Select a date:', min_value=min(valid_dates_o3), max_value=max(valid_dates_o3), 
+                                              value=st.session_state.random_date)
         
-        predict_datetime = datetime.datetime.combine(selected_date_predict, select_time_predict)
+        predict_datetime = pd.Timestamp(datetime.datetime.combine(selected_date_predict, select_time_predict))
         
         if predict_datetime not in station_df.index:
             st.session_state.station_off = True
