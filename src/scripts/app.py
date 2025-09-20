@@ -62,7 +62,6 @@ O3_THRESHOLDS = [0, 33, 66, 100, 120, 180, 240]
 
 
 
-
 # --Ensure that the files are downloaded once.
 if 'downloaded' not in st.session_state:
     st.session_state.downloaded = False
@@ -203,13 +202,13 @@ with st.sidebar:
         
         predict_datetime = datetime.datetime.combine(selected_date_predict, select_time_predict)
         
-        if predict_datetime.isoformat() not in station_df.index:
+        if predict_datetime not in station_df.index:
             st.session_state.station_off = True
             st.error('Selected date/time is unavailable due to station downtime. Please pick a valid date/time.')
             row = station_df.iloc[random.randint(0, len(station_df) - 1)] # If the date+time combination is not in the DB then simply randomly autofill
         else:
             st.session_state.station_off = False
-            row = station_df.loc[predict_datetime.isoformat()]
+            row = station_df.loc[predict_datetime]
             
         # Meteorological variables
         with st.expander('Meteorlogical Data'):
@@ -381,12 +380,14 @@ with st.sidebar:
         with st.expander("Why is the app so slow?"):
             st.text("Due to the limited resources on Streamlit community, I had to make some major UX changes for example adding debouncing and including session states to show the graph and plot when the code is executed. In addition, due to the size of each model, it already takes over 600 MB of RAM which is 60(%) of usage already. If a user spammed the predict button or any button, the models will load 'x' amount of times which will cause a memory leakage and in turn crash the app. I, as the the author will have to manually restart the app, as it will not restart itself. As a note, please be nice and try not to spam the app :).")
         with st.expander("What models are you using?"):
-            st.text("")
+            st.text("For both predictions I am currently used XGBOOST. For PM2.5 prediction I am using 3 models, a classifier to predict whether the t+12 will be above a threshold or not and 2 regressors to predict above and below the threshold. Both regressors are trained using quantile loss. On the other hand, the O3 prediction only uses one model due to the low F1 score achieved by the classifier, it was doing more harm than good because the the R2 was marginal compared to a single model hence why a single model was chosen. Finally, for the encoders, I have chosen to use TargetEncoders as it's much more suitable for my data.")
+        with st.expander("Can I use your code?"):
+            st.text("Sure, just make sure to cite me.")
 # -- Get a DF of the stations for the selected date and hour
 @st.cache_data
 def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
     try:
-        get_current_stations = X_dfs[pollutant].xs(predict_datetime.isoformat())[['station', 'wind_direction_10m', f'{pollutant}']]
+        get_current_stations = X_dfs[pollutant].loc(predict_datetime)[['station', 'wind_direction_10m', f'{pollutant}']]
         station_coordinates_joined = pd.merge(station_coordinates, get_current_stations, on='station', how='left')
         station_coordinates_joined[f'{pollutant}'] = np.expm1(station_coordinates_joined[f'{pollutant}'])
         mask = station_coordinates_joined[f'{pollutant}'].isna()
