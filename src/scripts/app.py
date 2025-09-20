@@ -200,7 +200,7 @@ with st.sidebar:
         selected_date_predict = st.date_input('Select a date:', min_value=min(valid_dates_o3), max_value=max(valid_dates_o3), 
                                               value=st.session_state.random_date)
         
-        predict_datetime = pd.Timestamp(datetime.datetime.combine(selected_date_predict, select_time_predict))
+        predict_datetime = pd.Timestamp(datetime.datetime.combine(selected_date_predict, select_time_predict)).tz_localize('UTC')
         
         if predict_datetime not in station_df.index:
             st.session_state.station_off = True
