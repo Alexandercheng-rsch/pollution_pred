@@ -387,6 +387,7 @@ with st.sidebar:
 @st.cache_data
 def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
     if predict_datetime in X_dfs[pollutant].index:
+        get_current_stations = X_dfs[pollutant].loc[predict_datetime].reset_index()
         get_current_stations = X_dfs[pollutant].loc[predict_datetime][['station', 'wind_direction_10m', f'{pollutant}']]
         station_coordinates_joined = pd.merge(station_coordinates, get_current_stations, on='station', how='left')
         station_coordinates_joined[f'{pollutant}'] = np.expm1(station_coordinates_joined[f'{pollutant}'])
