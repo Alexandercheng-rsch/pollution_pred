@@ -14,6 +14,8 @@ To make the results accessible, I also deployed an interactive **Streamlit app**
 - **Data Collection**  
   - Pulled pollution data from OpenAQ.  
   - Pulled meteorological data from Meteo.  
+  - Created scripts to handle API limits and automatically fetch large datasets.
+
 
 - **Data Engineering & Feature Engineering**  
   - Cleaned and merged datasets.  
