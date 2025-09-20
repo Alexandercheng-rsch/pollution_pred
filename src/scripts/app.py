@@ -386,8 +386,8 @@ with st.sidebar:
 # -- Get a DF of the stations for the selected date and hour
 @st.cache_data
 def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
-    try:
-        get_current_stations = X_dfs[pollutant].loc(predict_datetime)[['station', 'wind_direction_10m', f'{pollutant}']]
+    if predict_datetime in X_dfs[pollutant].index:
+        get_current_stations = X_dfs[pollutant].loc[predict_datetime][['station', 'wind_direction_10m', f'{pollutant}']]
         station_coordinates_joined = pd.merge(station_coordinates, get_current_stations, on='station', how='left')
         station_coordinates_joined[f'{pollutant}'] = np.expm1(station_coordinates_joined[f'{pollutant}'])
         mask = station_coordinates_joined[f'{pollutant}'].isna()
@@ -395,7 +395,7 @@ def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
         station_coordinates_joined.loc[~mask, 'status'] = 'Online'
         station_coordinates_joined[f'{pollutant}'] = station_coordinates_joined[f'{pollutant}'].round(2)
         offline = False
-    except KeyError:
+    else:
         get_current_stations = X_dfs[pollutant].iloc[[0]][['station', 'wind_direction_10m', f'{pollutant}']]
         get_current_stations['wind_direction_10m'] = np.nan
         station_coordinates_joined = pd.merge(station_coordinates, get_current_stations, on='station', how='left')
