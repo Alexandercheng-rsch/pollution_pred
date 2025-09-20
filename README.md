@@ -5,6 +5,7 @@ The goal of this project was to explore whether **meteorological data alone** ca
 I built an end-to-end pipeline that collected data from the **OpenAQ API** (pollution) and the **Meteo API** (weather), processed and combined the datasets, engineered meaningful features, and trained models to predict two pollutants: **Ozone (O₃)** and **Particulate Matter (PM2.5)**.  
 
 To make the results accessible, I also deployed an interactive **Streamlit app** where users can explore predictions and trends.  
+![example](https://github.com/Alexandercheng-rsch/pollution_prediction/blob/main/images/example.png)
 
 ---
 
@@ -51,3 +52,8 @@ air-quality-pipeline/
 │   └── icon/                      # Icons and static assets
 ├── requirements.txt
 └── .gitignore
+
+## 📂 Streamlit App
+
+## Demo
+[Watch the video](https://youtu.be/a4UmjSwL_ds)
