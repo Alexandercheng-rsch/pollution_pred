@@ -56,7 +56,6 @@ def load_encoder_pm25():
 # PREDICTION FUNCTION
 # ============================================================================
 def make_prediction(select_pollution, rolling_data, input_dict, lags, test_dataframes):
-    
     if select_pollution == 'pm25':
         pm25_classifier_model = load_model_pm25_classifier()
         pm25_middle_model = load_model_pm25_middle()
