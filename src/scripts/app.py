@@ -1,3 +1,6 @@
+# ============================================================================
+# IMPORTS AND SETUP
+# ============================================================================
 import streamlit as st
 import pickle
 import datetime
@@ -10,7 +13,8 @@ import random
 import xgboost as xgb
 import pandas as pd
 from matplotlib.colors import rgb2hex
-from functions import cmap_continuous, status_color
+from functions import cmap_continuous, status_color, remove_step_number_input
+from prediction import make_prediction
 import matplotlib.cm as cm
 import base64
 import matplotlib.colors as mcolors
@@ -20,13 +24,45 @@ import gdown
 import warnings
 import gc
 warnings.filterwarnings("ignore")
-def remove_step_number_input():
-    st.markdown("""
-                <style>
-                    .eaba2yi2 {display: none;}
-                </style>""",
-                unsafe_allow_html=True)
 remove_step_number_input()
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+COOLDOWN_SECONDS = 5
+PREDICTION_DELAY = 3
+
+STATION_LIST = ['Belfast Centre', 'Bexley - Belvedere West',
+       'Bexley - Slade Green Fidas', 'Birmingham A4540 Roadside',
+       'Blackpool Marton', 'Bournemouth', 'Brent - Ikea',
+       'Brighton Preston Park', 'Camden - Bloomsbury',
+       'Canterbury - UKA00424', 'Cardiff Centre', 'Charlton Mackrell',
+       'Chesterfield Loundsley Green', 'Chilbolton Observatory',
+       'Coventry Allesley', 'Derry Rosemount', 'Edinburgh St Leonards',
+       'Glazebury', 'Greenwich - Falconwood FDMS',
+       'Greenwich - Plumstead High Street',
+       'Greenwich - Westhorne Avenue', 'High Muffles', 'Honiton',
+       'Hull Freetown', 'Kensington and Chelsea - North Ken',
+       'Leamington Spa', 'Leeds Centre', 'Leicester University',
+       'Lewisham - Honor Oak Park', 'Liverpool Speke',
+       'London Harlington', 'London Hillingdon', 'London Westminster',
+       'Lullington Heath', 'Manchester Piccadilly', 'Middlesbrough',
+       'Narberth', 'Norwich Lakenfields', 'Oxford St Ebbes',
+       'Plymouth Centre', 'Port Talbot Margam', 'Portsmouth', 'Preston',
+       'Reading New Town', 'Rochester Stoke', 'Salford Eccles',
+       'Sheffield Tinsley', 'Southampton Centre', 'Southend-on-Sea',
+       'Southwark - Elephant and Castle', 'St Osyth',
+       'Stoke-on-Trent Centre', 'Waterloo Place (The Crown Estate)',
+       'Wicken Fen', 'Wigan Centre', 'Wirral Tranmere', 'Yarner Wood',
+       'York Bootham']
+
+PM25_THRESHOLDS = [0, 11, 23, 35, 41, 47, 53, 58, 64, 70]
+O3_THRESHOLDS = [0, 33, 66, 100, 120, 180, 240]
+
+
+
+
 # --Ensure that the files are downloaded once.
 if 'downloaded' not in st.session_state:
     st.session_state.downloaded = False
@@ -65,7 +101,10 @@ if not st.session_state.downloaded and not os.path.exists('./pollution_data'):
     progress_bar_2.empty()
         
     st.session_state.downloaded = True
-    
+
+# ============================================================================
+# DATA LOADING FUNCTIONS
+# ============================================================================
 # -- Define encoders
 o3_encoder = None
 pm25_encoder = None
@@ -73,8 +112,6 @@ encode_dict = {
     'pm25': pm25_encoder,
     'o3': o3_encoder
 }
-# -- Cooldown for prediction button
-cooldown = 5
 # -- Loading valid dates and test data
 @st.cache_data
 def load_data(path):
@@ -90,62 +127,12 @@ def load_icon(path):
 
 green_arrow = load_icon('src/icon/arrow.png')
 
-# -- Function for encoder dictionary
-# @st.cache_data
-# def get_encoder_dict(encoder_1, encoder_2):
-#     encoders_dict = {
-#     'o3': encoder_1,
-#     'pm25': encoder_2
-# }
-#     return encoders_dict
 # -- Set page config
 apptitle = 'Air Quality Forecaster'
 
-# -- Load XG Models
-# -- o3 Model
-@st.cache_resource
-def load_model_o3():
-    with open('/mount/src/pollution_pred/pollution_data/models/xg_reg_o3.model', 'rb') as f:
-        model = pickle.load(f)
-    return model 
-
-# -- PM2.5 Classifier Model
-@st.cache_resource
-def load_model_pm25_classifier():
-    model = xgb.XGBClassifier()
-    model.load_model('/mount/src/pollution_pred/pollution_data/models/binary_classifier.model')
-    return model 
-
-# -- PM2.5 Middle Model
-@st.cache_resource
-def load_model_pm25_middle():
-    model = xgb.XGBRegressor()
-    model.load_model('/mount/src/pollution_pred/pollution_data/models/xg_mid.model')
-    return model 
-# -- PM2.5 Upper Model 
-@st.cache_resource
-def load_model_pm25_upper():
-    model = xgb.XGBRegressor()
-    model.load_model('/mount/src/pollution_pred/pollution_data/models/xg_90.model')
-    return model 
-
-# -- Initiate Models
-
-# -- Load Target Encoders
-# -- o3 Model
-@st.cache_resource
-def load_encoder_o3():
-    with open('/mount/src/pollution_pred/pollution_data/models/encoder_o3.model', 'rb') as f:
-        model = pickle.load(f)
-    return model
-
-# -- PM2.5 Model
-@st.cache_resource
-def load_encoder_pm25():
-    with open('/mount/src/pollution_pred/pollution_data/models/encoder_pm25.model', 'rb') as f:
-        model = pickle.load(f)
-    return model
-
+# ============================================================================
+# PAGE CONFIGURATION AND SESSION STATES
+# ============================================================================
 
 st.set_page_config(page_title=apptitle, page_icon=':cloud:', layout='wide')
 
@@ -195,29 +182,10 @@ X_dfs = {
 st.title('Air Quality Forecaster 📈')
 st.subheader('12-Hour Ahead PM2.5 & O3 Prediction')
 st.caption('Powered by [Open-Meteo](https://open-meteo.com) and [OpenAQ](https://openaq.org)')
-station_list = ['Belfast Centre', 'Bexley - Belvedere West',
-       'Bexley - Slade Green Fidas', 'Birmingham A4540 Roadside',
-       'Blackpool Marton', 'Bournemouth', 'Brent - Ikea',
-       'Brighton Preston Park', 'Camden - Bloomsbury',
-       'Canterbury - UKA00424', 'Cardiff Centre', 'Charlton Mackrell',
-       'Chesterfield Loundsley Green', 'Chilbolton Observatory',
-       'Coventry Allesley', 'Derry Rosemount', 'Edinburgh St Leonards',
-       'Glazebury', 'Greenwich - Falconwood FDMS',
-       'Greenwich - Plumstead High Street',
-       'Greenwich - Westhorne Avenue', 'High Muffles', 'Honiton',
-       'Hull Freetown', 'Kensington and Chelsea - North Ken',
-       'Leamington Spa', 'Leeds Centre', 'Leicester University',
-       'Lewisham - Honor Oak Park', 'Liverpool Speke',
-       'London Harlington', 'London Hillingdon', 'London Westminster',
-       'Lullington Heath', 'Manchester Piccadilly', 'Middlesbrough',
-       'Narberth', 'Norwich Lakenfields', 'Oxford St Ebbes',
-       'Plymouth Centre', 'Port Talbot Margam', 'Portsmouth', 'Preston',
-       'Reading New Town', 'Rochester Stoke', 'Salford Eccles',
-       'Sheffield Tinsley', 'Southampton Centre', 'Southend-on-Sea',
-       'Southwark - Elephant and Castle', 'St Osyth',
-       'Stoke-on-Trent Centre', 'Waterloo Place (The Crown Estate)',
-       'Wicken Fen', 'Wigan Centre', 'Wirral Tranmere', 'Yarner Wood',
-       'York Bootham']
+
+# ============================================================================
+# SIDEBAR INPUTS
+# ============================================================================
 
 # Select the station you want to predict
 with st.sidebar:
@@ -229,14 +197,14 @@ with st.sidebar:
         st.markdown('## Select Station and Input Meteorological Data')
         
         # Station selection
-        select_station = st.selectbox('Station', station_list)
+        select_station = st.selectbox('Station', STATION_LIST)
         
         #Select Pollutant
         select_pollution = st.selectbox('Pollutant', ['o3', 'PM2.5'])
         if select_pollution == 'PM2.5':
             pollutant = 'pm25'
             station_df = X_pm25_test[X_pm25_test['station'] ==f'{select_station}']
-            bins = [0, 11, 23, 35, 41, 47, 53, 58, 64, 70]
+            bins = PM25_THRESHOLDS
             cmap_list_lines = [
                 (0, '#2ecc71'),    
                 (11, '#2ecc71'),   
@@ -263,7 +231,7 @@ with st.sidebar:
             (180, '#8e44ad'), 
             (240, '#6c0a0a'),
                                 ]
-            bins = [0, 33, 66, 100, 120, 180, 240]
+            bins = O3_THRESHOLDS 
         # Date & time
         select_time_predict = st.time_input('Select a time:', step=3600, key='predict_time', value=datetime.time(hour=1))
         
@@ -283,7 +251,7 @@ with st.sidebar:
             
         # Meteorological variables
         with st.expander('Meteorlogical Data'):
-            select_t = st.number_input(f'{pollutant.upper()} Concentration (μg/m³)', float(0), float(300), 
+            current_concentration = st.number_input(f'{pollutant.upper()} Concentration (μg/m³)', float(0), float(300), 
                                        step=0.1, value=float(np.expm1(row[f'{pollutant}'])))
             select_temp = st.slider('Temperature (°C)', -10, 45, value=int(row['temperature_2m']))
             select_sp = st.number_input('Surface Pressure (hPa)', min_value=float(900), max_value=float(1100), 
@@ -321,7 +289,9 @@ with st.sidebar:
                             values[f'{feature}_{roll}'] = st.number_input(
                                 f'Rolling {roll}', value=row[f'{pollutant}_rolling_{feature}_{roll}'], key=f'rolling_{feature}_{roll}'
                             )
-
+# ============================================================================
+# PREDICTION LOGIC
+# ============================================================================
         # Given information, start predicting 
         current_time = time.time()
         time_left = current_time - st.session_state.last_changed
@@ -333,24 +303,11 @@ with st.sidebar:
             st.session_state.last_changed = time.time()
             st.session_state.last_execution = current_time
             time_since_clicked = current_time - st.session_state.cooldown
-            plus_12 = predict_datetime + datetime.timedelta(hours=12)
-            if time_since_clicked >= cooldown:
+            future_datetime = predict_datetime + datetime.timedelta(hours=12)
+            if time_since_clicked >= COOLDOWN_SECONDS:
                 with st.spinner("Predicting...", show_time=True): # Make user think the model it's doing big things lmao
-                    time.sleep(3)
-                if select_pollution == 'PM2.5':
-                    pm25_classifier_model = load_model_pm25_classifier()
-                    pm25_middle_model = load_model_pm25_middle()
-                    pm25_upper_model = load_model_pm25_upper()
-                    pm25_encoder = load_encoder_pm25()
-                    pm25_classifier_model.set_params(tree_method='hist', device='cpu')
-                    pm25_middle_model.set_params(tree_method='hist', device='cpu')
-                    pm25_upper_model.set_params(tree_method='hist', device='cpu')
-                    encode_dict['pm25'] = pm25_encoder
-                else:
-                    o3_encoder = load_encoder_o3()
-                    o3_model = load_model_o3()
-                    encode_dict['o3'] = o3_encoder
-                    o3_model.set_params(tree_method='hist', device='cpu')
+                    time.sleep(PREDICTION_DELAY)
+                    
                 st.session_state.loaded = True
                 st.session_state.last_execution = current_time
                 st.session_state.cooldown = current_time
@@ -358,10 +315,9 @@ with st.sidebar:
                 st.write(f'Date/Time: {selected_date_predict} {select_time_predict}')
                 st.write(f'Temperature: {select_temp}°C')
                 st.write(f'Wind Speed: {select_wind_speed} m/s')
-
                 input_dict = {
                     'select_station': select_station,
-                    'select_t': np.log1p(select_t),
+                    'current_concentration': np.log1p(current_concentration),
                     'select_wind_speed': select_wind_speed,
                     'select_wind_direction': select_wind_direction,
                     'select_temp': select_temp,
@@ -381,46 +337,18 @@ with st.sidebar:
                     'cos_wind_dir': np.cos(select_wind_direction),
                     'is_weekend': selected_date_predict.weekday() >= 5
                 }
-
-                # Add lags
-                for interval in [1, 2, 3, 6, 12, 24]:
-                    input_dict[f'lag_{interval}'] = np.log1p(lags[interval])
-
-                # Add rolling features
-                for feature in ['mean', 'std', 'min', 'max']:
-                    for interval in [1, 2, 3, 6, 12, 24]:
-                        input_dict[f'{feature}_{interval}'] = values[f'{feature}_{interval}']
-
-                input_df = pd.DataFrame([input_dict])
-                test_dict = {
-                    
-                }
-                input_df.columns = X_dfs[pollutant].columns
-                transformed_input = encode_dict[pollutant].transform(input_df)
-                
-                if pollutant == 'o3':
-                    prediction = np.expm1(o3_model.predict(transformed_input)[0])
-                    del o3_encoder; gc.collect()
-                    del o3_model; gc.collect()
-                else:
-                    threshold = 0.25  
-                    predict_prob = pm25_classifier_model.predict_proba(transformed_input)[:, 1]
-                    prediction = np.expm1(predict_prob * pm25_upper_model.predict(transformed_input) + (1 - predict_prob) * pm25_middle_model.predict(transformed_input))[0]
-                    del pm25_classifier_model; gc.collect()
-                    del pm25_encoder; gc.collect()
-                    del pm25_middle_model; gc.collect()
-                    del pm25_upper_model; gc.collect()
+                prediction = make_prediction(select_pollution, values, input_dict, lags, X_dfs)
                 if st.session_state.station_off:
                     st.warning('There is no data available for the selected date and time, a prediction will be made however no data will be shown on the graph.')
                 else:
                     st.metric(
-                        label=f'Predicted {pollutant} Concentration (µg/m³) at {plus_12.time()}, {plus_12.date()}',
+                        label=f'Predicted {pollutant} Concentration (µg/m³) at {future_datetime.time()}, {future_datetime.date()}',
                         value=f'{prediction:.2f}'
                 )
                 st.session_state.model_predicting = False
                 disable_predictbutton = False
             else:
-                remaining_time = cooldown - time_since_clicked
+                remaining_time = COOLDOWN_SECONDS - time_since_clicked
                 st.warning(f'Please wait for {remaining_time:.0f} seconds for your next prediction.')
 
     with tab2:
@@ -516,8 +444,12 @@ def get_current_station_dt(predict_datetime, pollutant, station_coordinates):
 station_coordinates_joined, mask, offline = get_current_station_dt(predict_datetime, pollutant, station_coordinates)
 if offline:
     st.toast('All stations are offline, exceptions triggered.')
+
+# ============================================================================
+# MAIN DASHBOARD 
+# ============================================================================
 # -- Main section of the app
-col= st.columns((2, 4.5, 2), gap='medium')
+col = st.columns((2, 4.5, 2), gap='medium')
 
 station_coordinates_joined_style = station_coordinates_joined.style.applymap(status_color, subset=["status"])
 
@@ -562,7 +494,7 @@ with col[1]:
         data = np.expm1(station_df.loc[predict_datetime.isoformat():end_interval.isoformat()][f'{pollutant}']) # Need to make sure to remove log transformation so it's clearer for the user
         data = pd.DataFrame(data, index=data.index).reset_index()
         data.columns = ['Time', f'{pollutant}']
-        plus_12 = predict_datetime + datetime.timedelta(hours=12)
+        future_datetime = predict_datetime + datetime.timedelta(hours=12)
         data['type'] = 'Ground Truth'
         line = (
             alt.Chart(data)
@@ -575,12 +507,12 @@ with col[1]:
         )
 
         predicted_point = pd.DataFrame(
-            {'Time': [pd.Timestamp(plus_12)],
+            {'Time': [pd.Timestamp(future_datetime)],
             f'{pollutant}': prediction,
             'type': ['Model Prediction']}
         )
         persistance_point = pd.DataFrame(
-            {'Time': [pd.Timestamp(plus_12)],
+            {'Time': [pd.Timestamp(future_datetime)],
             f'{pollutant}': np.expm1(row[f'{pollutant}']),
             'type': ['Persistance Prediction']}
         )
