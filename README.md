@@ -56,4 +56,5 @@ air-quality-pipeline/
 ## 📂 Streamlit App
 
 ## Demo
-[Watch the video](https://youtu.be/a4UmjSwL_ds)
+[![Watch the video](https://img.youtube.com/vi/a4UmjSwL_ds/0.jpg)](https://youtu.be/a4UmjSwL_ds)
+
