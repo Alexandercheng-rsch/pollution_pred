@@ -1,4 +1,4 @@
-# 🌍 Air Quality Prediction Pipeline  
+# Air Quality Prediction Pipeline  
 
 The goal of this project was to explore whether **meteorological data alone** can be used to predict **air pollution levels in the UK**.  
 
@@ -9,7 +9,7 @@ To make the results accessible, I also deployed an interactive **Streamlit app**
 
 ---
 
-## 🔍 What I Did  
+## What I Did  
 
 - **Data Collection**  
   - Pulled pollution data from OpenAQ.  
@@ -35,7 +35,7 @@ To make the results accessible, I also deployed an interactive **Streamlit app**
 
 ---
 
-## ⚙️ Tech Stack  
+## Frameworks 
 
 - **Python** (Pandas, NumPy, Scikit-learn, Matplotlib/Seaborn, Streamlit)  
 - **APIs**: OpenAQ, Meteo  
@@ -43,7 +43,7 @@ To make the results accessible, I also deployed an interactive **Streamlit app**
 
 ---
 
-## 📂 Project Structure  
+## Project Structure  
 
 ```bash
 air-quality-pipeline/
