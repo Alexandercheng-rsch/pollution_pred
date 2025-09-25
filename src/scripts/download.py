@@ -13,7 +13,7 @@ def download_models_and_data():
         "1qpdnUVErI2qNh0BrvPXsXMuF9FBs8EDH": "encoder_pm25.model",
         "1z2q62ZbcvJZ1UnBctHKMWvmoxjiC0A3k": "xg_90.model",
         "1LcUqJCRge7yxGOD9Q9w-lnqoVa8ilurm": "xg_mid.model",
-        "1ZXAIUHfCKy37E8fPANovri4yyzRVowN5": "xg_reg_o3.model"
+        "1zJO2hvk_kaTE3kt-glXcv_Br2Sx39Z5A": "xg_reg_o3.model"
     }
     progress_bar_1 = st.progress(0, text="Downloading models...")
     progress_bar_2 = st.progress(0, text="Downloading test files...")
