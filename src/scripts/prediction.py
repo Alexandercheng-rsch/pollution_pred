@@ -18,9 +18,8 @@ encode_dict = {
 # ============================================================================
 @st.cache_resource
 def load_model_o3():
-
     model = xgb.XGBClassifier()
-    model.load_model('#/mount/src/pollution_pred/pollution_data/models/xg_reg_o3.model')
+    model.load_model('/mount/src/pollution_pred/pollution_data/models/xg_reg_o3.model')
     return model 
 
 @st.cache_resource
